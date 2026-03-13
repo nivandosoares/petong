@@ -103,6 +103,44 @@ test("serves app shells for homepage, login, dashboard, and tenant routes", asyn
   }
 });
 
+test("requests and confirms password resets through auth endpoints", async () => {
+  const platformService = new PlatformService({ jwtSecret: "test-secret" });
+  platformService.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  });
+
+  const requested = await injectWithPlatform(
+    {
+      method: "POST",
+      url: "/api/auth/password-reset/request",
+      body: {
+        email: "ana@example.com"
+      }
+    },
+    platformService
+  );
+
+  assert.equal(requested.statusCode, 200);
+  assert.ok(requested.body.resetToken);
+
+  const confirmed = await injectWithPlatform(
+    {
+      method: "POST",
+      url: "/api/auth/password-reset/confirm",
+      body: {
+        resetToken: requested.body.resetToken,
+        newPassword: "new-password-123"
+      }
+    },
+    platformService
+  );
+
+  assert.equal(confirmed.statusCode, 200);
+  assert.ok(confirmed.body.token);
+});
+
 test("updates tenant branding and serves public tenant data", async () => {
   const platformService = new PlatformService({ jwtSecret: "test-secret" });
   const registration = platformService.registerUser({
