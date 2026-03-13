@@ -24,6 +24,7 @@ Build and maintain a multi-tenant SaaS platform for animal rescue NGOs and pet a
 The agent must not, without explicit human approval:
 
 - change the stack
+- install runtimes, package managers, external CLIs, or system services
 - split the project into microservices
 - add dependencies without a short justification in docs or commit message
 - alter authentication or authorization flows without tests
@@ -58,6 +59,7 @@ Stop and request human input if:
 
 - product behavior is ambiguous
 - architecture tradeoffs would affect multiple bounded areas
+- installation of a runtime, package, CLI, or system service would be required
 - required credentials or external services are unavailable
 - tests fail for reasons unrelated to the current issue
 - the issue requires data migration or security-sensitive changes

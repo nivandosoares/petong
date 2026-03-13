@@ -84,3 +84,21 @@ cover the behavior with automated backend tests
 
 done criteria:
 repository contains runnable backend domain code and tests for tenant-aware adoption workflows
+
+---
+
+ISSUE-006
+Add remote preview workflow with Cloudflare Tunnel
+
+status: closed
+priority: high
+type: feature
+
+description:
+add a repo-managed Cloudflare Tunnel helper for live remote previews
+require explicit approval before any future installation step
+document quick-tunnel and named-tunnel usage
+cover config generation with automated tests
+
+done criteria:
+repository contains a tunnel helper, installation approval rules, and executable tests for the generated tunnel config

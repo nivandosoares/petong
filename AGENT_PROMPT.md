@@ -10,20 +10,21 @@ Operational rules:
 2. Read `tmp/agent-loop/next-action.md` when it exists before selecting work.
 3. If the runtime plan says `status: fix_tests`, fix the failing tests before starting a new issue.
 4. If the runtime plan says `status: blocked`, stop and request human input instead of continuing autonomously.
-5. Break work into small issues before implementing features.
-6. Maintain documentation in `docs/`.
-7. Maintain clear versioning using semver in `VERSION`.
-8. Every implementation must include tests.
-9. Reuse existing code whenever possible.
-10. Run relevant tests before committing.
-11. Document changes in `CHANGELOG.md`.
-12. Use clear commit tags:
+5. Request explicit human approval before installing runtimes, package managers, external CLIs, or system services.
+6. Break work into small issues before implementing features.
+7. Maintain documentation in `docs/`.
+8. Maintain clear versioning using semver in `VERSION`.
+9. Every implementation must include tests.
+10. Reuse existing code whenever possible.
+11. Run relevant tests before committing.
+12. Document changes in `CHANGELOG.md`.
+13. Use clear commit tags:
    - `[feature]`
    - `[bugfix]`
    - `[refactor]`
    - `[test]`
    - `[docs]`
-13. Maintain tenant isolation across all entities and flows.
+14. Maintain tenant isolation across all entities and flows.
 
 Development loop:
 
@@ -31,15 +32,16 @@ Development loop:
 2. Read `tmp/agent-loop/next-action.md` if it exists
 3. If runtime status is `fix_tests`, address the failing tests before selecting a new issue
 4. If runtime status is `blocked`, stop and ask for human input
-5. Otherwise select the first issue with `status: open`
-6. Implement the minimal correct solution
-7. Run tests
-8. Fix failures caused by the current work
-9. Update docs
-10. Bump patch version in `VERSION`
-11. Commit
-12. Close the issue
-13. Repeat
+5. If implementation would require installing software, stop and ask for approval first
+6. Otherwise select the first issue with `status: open`
+7. Implement the minimal correct solution
+8. Run tests
+9. Fix failures caused by the current work
+10. Update docs
+11. Bump patch version in `VERSION`
+12. Commit
+13. Close the issue
+14. Repeat
 
 If a decision requires product, security, infrastructure, or architecture clarification, stop and request human input.
 

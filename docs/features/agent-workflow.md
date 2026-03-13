@@ -34,3 +34,9 @@ See `docs/features/test-discovery.md` for the supported layouts and script names
 - environmental or configuration blockers: stop and ask for human input
 
 `scripts/agent-loop.sh` stops only when the generated plan is `status: blocked`.
+
+## Installation approvals
+
+The autonomous workflow must stop for explicit human approval before installing runtimes, package managers, external CLIs, or system services.
+
+This now applies to infrastructure helpers such as Cloudflare Tunnel as well.
