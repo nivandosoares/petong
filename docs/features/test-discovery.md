@@ -29,6 +29,12 @@ The repo also includes an optional Selenium runner for manual browser interactio
 
 This is not part of the default test discovery flow because it depends on local Chrome and `chromedriver` availability.
 
+An optional UI evaluation routine is also available:
+
+- `python3 scripts/run-ui-evaluation.py`
+
+It produces a JSON findings report and is intended for manual UI review passes rather than the default automated test loop.
+
 ## Run order
 
 The runner executes suites in this order:

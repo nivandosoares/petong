@@ -19,3 +19,10 @@ test("route config maps about, register alias, and unknown routes", () => {
   assert.match(appJs, /pathname === "\/login" \|\| pathname === "\/register"/);
   assert.match(appJs, /view: "not-found"/);
 });
+
+test("route layout sets per-route titles and aria-current navigation state", () => {
+  assert.match(appJs, /title: "Petong \| Home"/);
+  assert.match(appJs, /title: "Petong \| Transparency"/);
+  assert.match(appJs, /document\.title = route\.title/);
+  assert.match(appJs, /link\.setAttribute\("aria-current", "page"\)/);
+});

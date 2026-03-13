@@ -461,6 +461,7 @@
       const response = await apiRequest(`/api/public/tenants/${slug}`, {});
       elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant, response.transparency);
       elements.publicPetsList.innerHTML = presenter.renderPublicPetCards(response.pets ?? []);
+      document.title = `${response.tenant.name} | Petong`;
       if (!elements.discoveryTenantSlug.value.trim()) {
         elements.discoveryTenantSlug.value = slug;
       }
@@ -563,34 +564,46 @@
     const pathname = window.location.pathname;
 
     if (pathname === "/") {
-      return { view: "landing", key: "landing", sections: [] };
+      return { view: "landing", key: "landing", sections: [], title: "Petong | Home" };
     }
 
     if (pathname === "/about") {
-      return { view: "about", key: "about", sections: [] };
+      return { view: "about", key: "about", sections: [], title: "Petong | About" };
     }
 
     if (pathname === "/login" || pathname === "/register") {
-      return { view: "dashboard", key: "login", sections: ["access"] };
+      return {
+        view: "dashboard",
+        key: "login",
+        sections: ["access"],
+        title: pathname === "/register" ? "Petong | Register" : "Petong | Login"
+      };
     }
 
     if (pathname === "/dashboard" || pathname === "/dashboard/ngo") {
       return {
         view: "dashboard",
         key: pathname === "/dashboard" ? "dashboard" : "dashboard-ngo",
-        sections: ["access", "ngo"]
+        sections: ["access", "ngo"],
+        title: pathname === "/dashboard" ? "Petong | Dashboard" : "Petong | NGO Management"
       };
     }
 
     if (pathname === "/dashboard/pets") {
-      return { view: "dashboard", key: "dashboard-pets", sections: ["access", "pets"] };
+      return {
+        view: "dashboard",
+        key: "dashboard-pets",
+        sections: ["access", "pets"],
+        title: "Petong | Pets"
+      };
     }
 
     if (pathname === "/dashboard/adoptions") {
       return {
         view: "dashboard",
         key: "dashboard-adoptions",
-        sections: ["access", "adoption"]
+        sections: ["access", "adoption"],
+        title: "Petong | Adoptions"
       };
     }
 
@@ -598,19 +611,21 @@
       return {
         view: "dashboard",
         key: "dashboard-transparency",
-        sections: ["access", "transparency"]
+        sections: ["access", "transparency"],
+        title: "Petong | Transparency"
       };
     }
 
     if (/^\/(?:ngo|t)\/[^/]+$/.test(pathname)) {
-      return { view: "public", key: "public", sections: [] };
+      return { view: "public", key: "public", sections: [], title: "Petong | Public NGO" };
     }
 
-    return { view: "not-found", key: "not-found", sections: [] };
+    return { view: "not-found", key: "not-found", sections: [], title: "Petong | Page Not Found" };
   }
 
   function applyPageLayout() {
     const route = currentRouteConfig();
+    document.title = route.title;
 
     for (const view of elements.views) {
       const allowed = String(view.dataset.view ?? "")
@@ -630,7 +645,13 @@
     }
 
     for (const link of elements.routeLinks) {
-      link.classList.toggle("is-active", link.dataset.routeLink === route.key);
+      const isActive = link.dataset.routeLink === route.key;
+      link.classList.toggle("is-active", isActive);
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
     }
   }
 

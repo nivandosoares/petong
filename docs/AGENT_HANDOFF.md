@@ -128,6 +128,7 @@ For the completed product slices, review:
 - `docs/features/adoption-workflow.md`
 - `docs/features/donation-transparency.md`
 - `docs/features/selenium-ui-tests.md`
+- `docs/features/ui-evaluation.md`
 
 ## Git and automation
 

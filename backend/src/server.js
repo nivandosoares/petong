@@ -25,12 +25,14 @@ const STATIC_FILES = {
   "/": path.join(FRONTEND_DIR, "index.html"),
   "/app.js": path.join(FRONTEND_DIR, "app.js"),
   "/presenter.js": path.join(FRONTEND_DIR, "presenter.js"),
-  "/styles.css": path.join(FRONTEND_DIR, "styles.css")
+  "/styles.css": path.join(FRONTEND_DIR, "styles.css"),
+  "/favicon.svg": path.join(FRONTEND_DIR, "favicon.svg")
 };
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8"
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml"
 };
 
 function createApp(options = {}) {
