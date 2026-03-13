@@ -37,6 +37,7 @@ This document is the minimal operator and agent bootstrap guide for continuing t
 Optional:
 
 - `cloudflared` or the repo-local binary at `tools/cloudflared`
+- Google Chrome or Chromium plus `chromedriver` for optional Selenium UI tests
 
 ## Install policy
 
@@ -52,6 +53,13 @@ Backend and frontend tests:
 npm run test:backend
 npm run test:frontend
 ./scripts/run-tests.sh
+```
+
+Optional Selenium UI smoke tests:
+
+```bash
+python3 -m pip install -r requirements-ui.txt
+CHROME_BINARY=/usr/bin/chromium python3 scripts/run-selenium-ui-tests.py --start-backend
 ```
 
 Run the app:
@@ -119,6 +127,8 @@ For the completed product slices, review:
 - `docs/features/adoption-discovery.md`
 - `docs/features/adoption-workflow.md`
 - `docs/features/donation-transparency.md`
+- `docs/features/selenium-ui-tests.md`
+- `docs/features/ui-evaluation.md`
 
 ## Git and automation
 

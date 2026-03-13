@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Petong Adoption Desk</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -21,6 +22,7 @@
           <a data-route-link="dashboard-pets" href="/dashboard/pets">Pets</a>
           <a data-route-link="dashboard-adoptions" href="/dashboard/adoptions">Adoptions</a>
           <a data-route-link="dashboard-transparency" href="/dashboard/transparency">Transparency</a>
+          <a data-route-link="about" href="/about">About</a>
           <a class="button button-ghost" href="/login">Log in</a>
           <a class="button" href="/dashboard">Open Desk</a>
         </div>
@@ -60,6 +62,33 @@
             <article class="showcase-card showcase-float">
               <span class="badge badge-warm">Live preview</span>
               <p>Public NGO branding stays visible while you work.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="info-band" data-view="about">
+        <div class="shell info-shell">
+          <div class="section-heading">
+            <p class="eyebrow">About Petong</p>
+            <h2>Built for rescue teams that need speed and trust</h2>
+            <p>Petong unifies NGO operations, adoption flow, and public transparency into route-driven screens that are easy to share with staff and volunteers.</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">🧭</div>
+              <h3>Route-first workflow</h3>
+              <p>Each dashboard route isolates a specific operational context: NGOs, pets, adoptions, and transparency.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">🔐</div>
+              <h3>Tenant-safe by default</h3>
+              <p>Every primary action relies on tenant context so organizations can operate independently on the same platform.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">🌍</div>
+              <h3>Public-facing confidence</h3>
+              <p>Visitors can inspect NGO identity and available pets from direct public routes like <code>/t/:slug</code>.</p>
             </article>
           </div>
         </div>
@@ -504,6 +533,21 @@
           </section>
         </div>
       </section>
+      <section class="not-found-band" data-view="not-found">
+        <div class="shell">
+          <article class="panel stack">
+            <p class="eyebrow">404</p>
+            <h2>Page not found</h2>
+            <p class="card-meta">This route does not exist in Petong yet. You can continue through the main pages below.</p>
+            <div class="hero-actions">
+              <a class="button" href="/">Go to home</a>
+              <a class="button button-secondary" href="/dashboard">Open dashboard</a>
+              <a class="button button-ghost" href="/about">About</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
     </main>
 
     <script src="/presenter.js"></script>

@@ -25,12 +25,14 @@ const STATIC_FILES = {
   "/": path.join(FRONTEND_DIR, "index.html"),
   "/app.js": path.join(FRONTEND_DIR, "app.js"),
   "/presenter.js": path.join(FRONTEND_DIR, "presenter.js"),
-  "/styles.css": path.join(FRONTEND_DIR, "styles.css")
+  "/styles.css": path.join(FRONTEND_DIR, "styles.css"),
+  "/favicon.svg": path.join(FRONTEND_DIR, "favicon.svg")
 };
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8"
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml"
 };
 
 function createApp(options = {}) {
@@ -131,7 +133,7 @@ async function routeRequest(request, response, services) {
   const url = new URL(request.url, "http://localhost");
   const method = request.method ?? "GET";
 
-  if (method === "GET" && (STATIC_FILES[url.pathname] || isAppShellRoute(url.pathname))) {
+  if (method === "GET" && (STATIC_FILES[url.pathname] || isAppShellRoute(url.pathname) || shouldServeAppShell(url.pathname))) {
     writeStaticFile(response, STATIC_FILES[url.pathname] ?? STATIC_FILES["/"]);
     return;
   }
@@ -580,12 +582,18 @@ function authenticateRequest(request, platformService) {
 
 function isAppShellRoute(pathname) {
   return (
+    pathname === "/about" ||
     pathname === "/login" ||
+    pathname === "/register" ||
     pathname === "/dashboard" ||
     /^\/dashboard\/[^/]+$/.test(pathname) ||
     /^\/t\/[^/]+$/.test(pathname) ||
     /^\/ngo\/[^/]+$/.test(pathname)
   );
+}
+
+function shouldServeAppShell(pathname) {
+  return pathname !== "/health" && !pathname.startsWith("/api/") && !path.extname(pathname);
 }
 
 module.exports = {

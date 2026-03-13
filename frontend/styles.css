@@ -127,6 +127,7 @@ p {
 .feature-band,
 .public-band,
 .preview-band,
+.not-found-band,
 .workspace-band {
   position: relative;
 }
@@ -364,7 +365,8 @@ p {
   box-shadow: none;
 }
 
-.feature-band {
+.feature-band,
+.info-band {
   padding: 56px 0;
   background:
     linear-gradient(180deg, rgba(246, 206, 85, 0.12), rgba(246, 206, 85, 0.04)),
@@ -373,6 +375,7 @@ p {
 
 .public-band,
 .preview-band,
+.not-found-band,
 .workspace-band {
   padding: 64px 0;
 }
@@ -679,7 +682,8 @@ input:focus {
   .hero-band,
   .preview-band,
   .workspace-band,
-  .feature-band {
+  .feature-band,
+.info-band {
     padding: 40px 0;
   }
 
