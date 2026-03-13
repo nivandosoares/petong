@@ -66,13 +66,6 @@ p {
   margin: 0;
 }
 
-code {
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: rgba(111, 98, 88, 0.12);
-  font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 0.84em;
-}
 
 .shell {
   width: min(1180px, calc(100% - 32px));
@@ -132,7 +125,6 @@ code {
 
 .hero-band,
 .feature-band,
-.info-band,
 .public-band,
 .preview-band,
 .not-found-band,
@@ -709,13 +701,3 @@ input:focus {
   }
 }
 
-
-.info-shell {
-  display: grid;
-  gap: 20px;
-}
-
-.not-found-band .panel {
-  max-width: 680px;
-  margin: 0 auto;
-}

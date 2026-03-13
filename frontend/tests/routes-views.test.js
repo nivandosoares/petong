@@ -8,21 +8,23 @@ const path = require("node:path");
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const appJs = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
 
-test("contains additional top-level views for about and not-found", () => {
-  assert.match(html, /data-view="about"/);
-  assert.match(html, /data-view="not-found"/);
-  assert.match(html, /href="\/about"/);
+test("topbar and workspace include all supported app-shell routes", () => {
+  assert.match(html, /href="\/"/);
+  assert.match(html, /href="\/login"/);
+  assert.match(html, /href="\/dashboard"/);
+  assert.match(html, /href="\/dashboard\/ngo"/);
+  assert.match(html, /href="\/dashboard\/pets"/);
+  assert.match(html, /href="\/dashboard\/adoptions"/);
+  assert.match(html, /href="\/dashboard\/transparency"/);
 });
 
-test("route config maps about, register alias, and unknown routes", () => {
-  assert.match(appJs, /pathname === "\/about"/);
-  assert.match(appJs, /pathname === "\/login" \|\| pathname === "\/register"/);
-  assert.match(appJs, /view: "not-found"/);
-});
-
-test("route layout sets per-route titles and aria-current navigation state", () => {
-  assert.match(appJs, /title: "Petong \| Home"/);
-  assert.match(appJs, /title: "Petong \| Transparency"/);
-  assert.match(appJs, /document\.title = route\.title/);
-  assert.match(appJs, /link\.setAttribute\("aria-current", "page"\)/);
+test("route config handles all supported frontend routes", () => {
+  assert.match(appJs, /pathname === "\/"/);
+  assert.match(appJs, /pathname === "\/login"/);
+  assert.match(appJs, /pathname === "\/dashboard" \|\| pathname === "\/dashboard\/ngo"/);
+  assert.match(appJs, /pathname === "\/dashboard\/pets"/);
+  assert.match(appJs, /pathname === "\/dashboard\/adoptions"/);
+  assert.match(appJs, /pathname === "\/dashboard\/transparency"/);
+  assert.ok(appJs.includes('if (/^\\/(?:ngo|t)\\/[^/]+$/.test(pathname))'));
+  assert.ok(appJs.includes('return { view: "landing", key: "landing", sections: [] };'));
 });
