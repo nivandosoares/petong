@@ -60,6 +60,7 @@ Optional Selenium UI smoke tests:
 ```bash
 python3 -m pip install -r requirements-ui.txt
 CHROME_BINARY=/usr/bin/chromium python3 scripts/run-selenium-ui-tests.py --start-backend
+BASE_URL=http://127.0.0.1:3001 CHROME_BINARY=/usr/bin/chromium python3 frontend/tests/selenium_ui_sequences.py
 ```
 
 Run the app:
@@ -127,6 +128,7 @@ For the completed product slices, review:
 - `docs/features/adoption-discovery.md`
 - `docs/features/adoption-workflow.md`
 - `docs/features/donation-transparency.md`
+- `docs/features/password-reset.md`
 - `docs/features/selenium-ui-tests.md`
 - `docs/features/ui-evaluation.md`
 

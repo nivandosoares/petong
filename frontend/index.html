@@ -204,6 +204,24 @@
                   </label>
                   <button class="button button-secondary" type="submit">Login</button>
                 </form>
+                <form id="password-reset-request-form" class="stack">
+                  <label class="field">
+                    <span>Reset Email</span>
+                    <input name="email" type="email" required autocomplete="off">
+                  </label>
+                  <button class="button button-ghost" type="submit">Request Reset</button>
+                </form>
+                <form id="password-reset-confirm-form" class="stack">
+                  <label class="field">
+                    <span>Reset Token</span>
+                    <input name="resetToken" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>New Password</span>
+                    <input name="newPassword" type="password" required>
+                  </label>
+                  <button class="button button-secondary" type="submit">Set New Password</button>
+                </form>
               </div>
             </article>
 

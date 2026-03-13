@@ -28,6 +28,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:3001")
 WAIT_SECONDS = int(os.getenv("UI_WAIT_SECONDS", "12"))
+HEADLESS = os.getenv("UI_HEADLESS", "").lower() in {"1", "true", "yes"}
 
 
 @dataclass
@@ -44,8 +45,14 @@ class PetongUISequences:
 
     def __init__(self) -> None:
         opts = webdriver.ChromeOptions()
-        opts.add_argument("--headless=new")
+        if HEADLESS:
+            opts.add_argument("--headless=new")
         opts.add_argument("--window-size=1440,1700")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        chrome_binary = os.getenv("CHROME_BINARY")
+        if chrome_binary:
+            opts.binary_location = chrome_binary
         self.driver = webdriver.Chrome(options=opts)
         self.wait = WebDriverWait(self.driver, WAIT_SECONDS)
 
@@ -151,7 +158,11 @@ class PetongUISequences:
 
     def _click(self, css: str) -> None:
         el = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, css)))
-        el.click()
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
+        try:
+            el.click()
+        except Exception:
+            self.driver.execute_script("arguments[0].click();", el)
 
     def _expect_text(self, text: str) -> None:
         try:

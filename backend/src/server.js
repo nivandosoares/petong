@@ -160,6 +160,18 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/api/auth/password-reset/request") {
+    const body = await readJsonBody(request);
+    writeJson(response, 200, services.platformService.requestPasswordReset(body));
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/auth/password-reset/confirm") {
+    const body = await readJsonBody(request);
+    writeJson(response, 200, services.platformService.resetPassword(body));
+    return;
+  }
+
   if (method === "POST" && url.pathname === "/api/auth/logout") {
     writeJson(response, 200, { ok: true });
     return;

@@ -42,7 +42,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--test",
         action="append",
-        choices=["routes", "public"],
+        choices=["routes", "public", "auth-flow"],
         help="Limit execution to one or more named smoke tests.",
     )
     parser.add_argument(
@@ -251,12 +251,22 @@ def seed_public_demo(base_url: str) -> dict:
 def assert_text(driver, by, selector: str, expected: str) -> None:
     _, _, _, WebDriverWait, EC = require_selenium()
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, selector)))
+    WebDriverWait(driver, 10).until(EC.text_to_be_present_in_element((by, selector), expected))
     text = driver.find_element(by, selector).text
     if expected not in text:
         raise AssertionError(
             f"Expected '{expected}' in '{selector}', got '{text}'. "
             f"url={driver.current_url} title={driver.title!r}"
         )
+
+
+def click_selector(driver, by, selector: str) -> None:
+    element = driver.find_element(by, selector)
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+    try:
+        element.click()
+    except Exception:
+        driver.execute_script("arguments[0].click();", element)
 
 
 def run_routes_smoke(driver, base_url: str) -> None:
@@ -281,6 +291,67 @@ def run_public_smoke(driver, base_url: str) -> None:
     assert_text(driver, By.TAG_NAME, "main", seeded["campaignName"])
 
 
+def run_auth_flow_smoke(driver, base_url: str) -> None:
+    _, _, By, WebDriverWait, EC = require_selenium()
+    stamp = str(int(time.time() * 1000))
+    email = f"flow+{stamp}@example.com"
+    original_password = "password123"
+    new_password = "new-password-123"
+    slug = f"flow-ngo-{stamp}"
+
+    driver.get(f"{base_url.rstrip('/')}/login")
+    driver.find_element(By.CSS_SELECTOR, '#register-form input[name="name"]').send_keys("Flow User")
+    driver.find_element(By.CSS_SELECTOR, '#register-form input[name="email"]').send_keys(email)
+    driver.find_element(By.CSS_SELECTOR, '#register-form input[name="password"]').send_keys(original_password)
+    click_selector(driver, By.CSS_SELECTOR, '#register-form button[type="submit"]')
+    assert_text(driver, By.CSS_SELECTOR, "#auth-state", "Flow User")
+
+    driver.execute_script("window.localStorage.removeItem('petong_auth_token');")
+    driver.get(f"{base_url.rstrip('/')}/login")
+    driver.find_element(By.CSS_SELECTOR, '#password-reset-request-form input[name="email"]').send_keys(email)
+    click_selector(driver, By.CSS_SELECTOR, '#password-reset-request-form button[type="submit"]')
+    token_value = driver.find_element(By.CSS_SELECTOR, '#password-reset-confirm-form input[name="resetToken"]').get_attribute("value")
+    if not token_value:
+        raise AssertionError("Password reset token was not populated into the reset form")
+    driver.find_element(By.CSS_SELECTOR, '#password-reset-confirm-form input[name="newPassword"]').send_keys(new_password)
+    click_selector(driver, By.CSS_SELECTOR, '#password-reset-confirm-form button[type="submit"]')
+    assert_text(driver, By.CSS_SELECTOR, "#auth-state", "Flow User")
+
+    driver.get(f"{base_url.rstrip('/')}/dashboard/ngo")
+    slug_field = driver.find_element(By.CSS_SELECTOR, '#tenant-form input[name="slug"]')
+    slug_field.clear()
+    slug_field.send_keys(slug)
+    driver.find_element(By.CSS_SELECTOR, '#tenant-form input[name="name"]').send_keys("Flow NGO")
+    driver.find_element(By.CSS_SELECTOR, '#tenant-form input[name="description"]').send_keys("Created in Selenium auth flow")
+    click_selector(driver, By.CSS_SELECTOR, '#tenant-form button[type="submit"]')
+    assert_text(driver, By.CSS_SELECTOR, "#tenant-list", "Flow NGO")
+
+    driver.get(f"{base_url.rstrip('/')}/dashboard/pets")
+    tenant_id = driver.find_element(By.CSS_SELECTOR, "#tenant-id").get_attribute("value")
+    if not tenant_id or tenant_id == "ngo_red":
+        raise AssertionError(f"Unexpected tenant id value after NGO creation: {tenant_id!r}")
+    driver.find_element(By.CSS_SELECTOR, '#pet-form input[name="name"]').send_keys("Browser Luna")
+    driver.find_element(By.CSS_SELECTOR, '#pet-form input[name="species"]').send_keys("dog")
+    driver.find_element(By.CSS_SELECTOR, '#pet-form input[name="description"]').send_keys("Created from Selenium auth flow")
+    driver.find_element(By.CSS_SELECTOR, '#pet-form input[name="ageGroup"]').send_keys("adult")
+    click_selector(driver, By.CSS_SELECTOR, '#pet-form button[type="submit"]')
+    assert_text(driver, By.CSS_SELECTOR, "#pets-list", "Browser Luna")
+
+    pet_id_text = driver.find_element(By.CSS_SELECTOR, "#pets-list .card .card-meta").text
+    pet_id = pet_id_text.split("Pet ID: ", 1)[1]
+
+    driver.get(f"{base_url.rstrip('/')}/dashboard/adoptions")
+    driver.find_element(By.CSS_SELECTOR, '#application-form input[name="petId"]').send_keys(pet_id)
+    driver.find_element(By.CSS_SELECTOR, '#application-form input[name="adopterName"]').send_keys("Flow User")
+    driver.find_element(By.CSS_SELECTOR, '#application-form input[name="message"]').send_keys("Interested via Selenium flow")
+    click_selector(driver, By.CSS_SELECTOR, '#application-form button[type="submit"]')
+    assert_text(driver, By.CSS_SELECTOR, "#my-applications-list", "Interested via Selenium flow")
+
+    driver.get(f"{base_url.rstrip('/')}/t/{slug}")
+    assert_text(driver, By.TAG_NAME, "main", "Flow NGO")
+    assert_text(driver, By.TAG_NAME, "main", "Browser Luna")
+
+
 def main() -> int:
     args = parse_args()
     selected = args.test or ["routes"]
@@ -299,6 +370,8 @@ def main() -> int:
                 run_routes_smoke(driver, args.base_url)
             if "public" in selected:
                 run_public_smoke(driver, args.base_url)
+            if "auth-flow" in selected:
+                run_auth_flow_smoke(driver, args.base_url)
         finally:
             driver.quit()
     except Exception as error:
