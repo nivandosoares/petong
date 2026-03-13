@@ -18,10 +18,14 @@ npm_has_script() {
   local dir="$1"
   local script_name="$2"
 
-  command -v npm >/dev/null 2>&1 || return 1
+  command -v node >/dev/null 2>&1 || return 1
   [ -f "${dir}/package.json" ] || return 1
 
-  npm --prefix "${dir}" run | grep -Eq "(^|[[:space:]])${script_name}$"
+  node -e "
+    const fs = require('node:fs');
+    const pkg = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+    process.exit(pkg.scripts && Object.prototype.hasOwnProperty.call(pkg.scripts, process.argv[2]) ? 0 : 1);
+  " "${dir}/package.json" "${script_name}"
 }
 
 run_npm_script_if_present() {
