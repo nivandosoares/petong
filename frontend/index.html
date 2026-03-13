@@ -486,7 +486,10 @@
                 </label>
                 <label class="field">
                   <span>Yard Availability</span>
-                  <input name="yardAvailability" value="false" autocomplete="off">
+                  <select name="yardAvailability">
+                    <option value="false" selected>No</option>
+                    <option value="true">Yes</option>
+                  </select>
                 </label>
                 <label class="field">
                   <span>City</span>
@@ -494,11 +497,17 @@
                 </label>
                 <label class="field">
                   <span>Has Children</span>
-                  <input name="hasChildren" value="false" autocomplete="off">
+                  <select name="hasChildren">
+                    <option value="false" selected>No</option>
+                    <option value="true">Yes</option>
+                  </select>
                 </label>
                 <label class="field">
                   <span>Has Other Animals</span>
-                  <input name="hasOtherAnimals" value="false" autocomplete="off">
+                  <select name="hasOtherAnimals">
+                    <option value="false" selected>No</option>
+                    <option value="true">Yes</option>
+                  </select>
                 </label>
                 <label class="field">
                   <span>Pet Experience</span>
@@ -510,7 +519,10 @@
                 </label>
                 <label class="field">
                   <span>Can Handle Special Needs</span>
-                  <input name="canHandleSpecialNeeds" value="false" autocomplete="off">
+                  <select name="canHandleSpecialNeeds">
+                    <option value="false" selected>No</option>
+                    <option value="true">Yes</option>
+                  </select>
                 </label>
                 <button class="button" type="submit">Save Profile</button>
               </form>

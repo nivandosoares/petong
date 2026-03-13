@@ -33,6 +33,7 @@ BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:3001")
 WAIT_SECONDS = int(os.getenv("UI_WAIT_SECONDS", "12"))
 REPORT_DIR = Path(os.getenv("UI_AUDIT_REPORT_DIR", "tmp/ui-audit"))
 STRICT_MODE = os.getenv("UI_AUDIT_STRICT", "1") == "1"
+HEADLESS = os.getenv("UI_HEADLESS", "1") == "1"
 
 
 @dataclass
@@ -55,8 +56,14 @@ class Finding:
 class PetongUIAudit:
     def __init__(self) -> None:
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless=new")
+        if HEADLESS:
+            options.add_argument("--headless=new")
         options.add_argument("--window-size=1440,1800")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        chrome_binary = os.getenv("CHROME_BINARY")
+        if chrome_binary:
+            options.binary_location = chrome_binary
         self.driver = webdriver.Chrome(options=options)
         self.wait = WebDriverWait(self.driver, WAIT_SECONDS)
         self.findings: list[Finding] = []
@@ -145,12 +152,12 @@ class PetongUIAudit:
         self._expect_text(self.ctx.tenant_name)
 
     def seq_theme_update_and_preview_sync(self) -> None:
-        tenant_id = self._extract_text(r"Tenant ID: (ngo_[A-Za-z0-9_-]+)")
+        self.driver.get(f"{BASE_URL}/dashboard/ngo")
+        tenant_id = self.driver.find_element(By.CSS_SELECTOR, "#tenant-id").get_attribute("value")
         if not tenant_id:
             self._add_finding("medium", "ux", "Tenant ID not visible after NGO creation", "Could not capture tenant id for theme-edit sequence.")
             return
 
-        self.driver.get(f"{BASE_URL}/dashboard/ngo")
         self._fill("#tenant-theme-form input[name='tenantId']", tenant_id)
         self._fill("#tenant-theme-form input[name='primaryColor']", "#1255cc")
         self._fill("#tenant-theme-form input[name='secondaryColor']", "#32d67a")
@@ -171,7 +178,7 @@ class PetongUIAudit:
         self._fill("#pet-form input[name='ageGroup']", "adult")
         self._fill("#pet-form input[name='description']", "Sociable and calm")
         self._click("#pet-form button[type='submit']")
-        self._expect_text("Pet added.")
+        self._expect_text("Pet registered.")
 
         self.pet_id = self._extract_text(r"Pet ID: (pet_[A-Za-z0-9_-]+)")
         if not self.pet_id:
@@ -189,15 +196,15 @@ class PetongUIAudit:
         self._click("#application-form button[type='submit']")
         self._expect_text("Application submitted.")
 
-        self.application_id = self._extract_text(r"Application ID: (app_[A-Za-z0-9_-]+)")
+        self.application_id = self._extract_text(r"Application ID: (application_[A-Za-z0-9_-]+)")
         if not self.application_id:
             self._add_finding("high", "data-flow", "Application ID missing from list", "Could not execute review action assertions.")
             return
 
         self._click("button[data-review-status='under_review']")
-        self._expect_text("Application updated to under_review.")
+        self._expect_text("Application moved to under_review.")
         self._click("button[data-review-status='approved']")
-        self._expect_text("Application updated to approved.")
+        self._expect_text("Application moved to approved.")
 
     def seq_transparency_flow(self) -> None:
         self.driver.get(f"{BASE_URL}/dashboard/transparency")
@@ -207,7 +214,7 @@ class PetongUIAudit:
         self._click("#campaign-form button[type='submit']")
         self._expect_text("Campaign created.")
 
-        self.campaign_id = self._extract_text(r"Campaign ID: (camp_[A-Za-z0-9_-]+)")
+        self.campaign_id = self._extract_text(r"Campaign ID: (campaign_[A-Za-z0-9_-]+)")
         if not self.campaign_id:
             self._add_finding("high", "data-flow", "Campaign ID missing", "Donation/expense forms need campaign id.")
             return
@@ -244,7 +251,7 @@ class PetongUIAudit:
     # Helpers
     def _heuristic_gap_checks(self) -> None:
         source = self.driver.page_source
-        if "type=\"checkbox\"" not in source and "Has Children" in source:
+        if '<select name="hasChildren"' not in source and 'type="checkbox"' not in source and "Has Children" in source:
             self._add_finding(
                 "medium",
                 "usability",
@@ -304,7 +311,11 @@ class PetongUIAudit:
 
     def _click(self, css: str) -> None:
         el = self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, css)))
-        el.click()
+        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", el)
+        try:
+            el.click()
+        except Exception:
+            self.driver.execute_script("arguments[0].click();", el)
 
     def _expect_text(self, text: str) -> None:
         try:

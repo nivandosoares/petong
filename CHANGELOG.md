@@ -32,3 +32,4 @@ All notable autonomous-agent changes should be recorded here.
 - Fixed test discovery script noise by reading npm script definitions directly from `package.json`, and added regression coverage for the clean full-loop output.
 - Added password reset request/confirm support, auth-route recovery forms, and a Selenium auth-flow scenario covering signup through public landing validation.
 - Expanded the UI evaluator to crawl visible internal links, fail on dead-end routes, and exercise human-style navigation paths across landing, dashboard, and public NGO pages.
+- Stabilized the autonomous UI audit workflow with isolated backend startup, health checks, restored route/auth coverage, safer Selenium clicks, and constrained adoption-profile boolean controls.
