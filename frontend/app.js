@@ -12,6 +12,8 @@
     authState: document.querySelector("#auth-state"),
     registerForm: document.querySelector("#register-form"),
     loginForm: document.querySelector("#login-form"),
+    passwordResetRequestForm: document.querySelector("#password-reset-request-form"),
+    passwordResetConfirmForm: document.querySelector("#password-reset-confirm-form"),
     tenantForm: document.querySelector("#tenant-form"),
     tenantThemeForm: document.querySelector("#tenant-theme-form"),
     memberForm: document.querySelector("#member-form"),
@@ -47,6 +49,8 @@
 
   elements.registerForm.addEventListener("submit", handleRegisterSubmit);
   elements.loginForm.addEventListener("submit", handleLoginSubmit);
+  elements.passwordResetRequestForm.addEventListener("submit", handlePasswordResetRequestSubmit);
+  elements.passwordResetConfirmForm.addEventListener("submit", handlePasswordResetConfirmSubmit);
   elements.tenantForm.addEventListener("submit", handleTenantSubmit);
   elements.tenantThemeForm.addEventListener("submit", handleTenantThemeSubmit);
   elements.memberForm.addEventListener("submit", handleMemberSubmit);
@@ -64,8 +68,12 @@
 
   refreshPlatform().then(async () => {
     await loadPublicTenantView();
-    if (isWorkspaceRoute() && authToken) {
-      await refreshBoard();
+    if (isWorkspaceRoute()) {
+      if (authToken) {
+        await refreshBoard();
+      } else {
+        renderGuestWorkspaceState();
+      }
       await refreshDiscovery();
       await refreshMyApplications();
     }
@@ -75,6 +83,9 @@
     if (!authToken) {
       session = null;
       renderPlatform();
+      if (isWorkspaceRoute()) {
+        renderGuestWorkspaceState();
+      }
       return;
     }
 
@@ -86,6 +97,9 @@
       session = null;
       window.localStorage.removeItem("petong_auth_token");
       renderPlatform();
+      if (isWorkspaceRoute()) {
+        renderGuestWorkspaceState();
+      }
       setFlash(error.message, true);
     }
   }
@@ -119,6 +133,7 @@
 
   async function handleCampaignSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/transparency/campaigns", {
@@ -126,13 +141,13 @@
         auth: true,
         tenantId: getTenantId(),
         body: {
-          name: valueFrom(event.currentTarget, "name"),
-          description: valueFrom(event.currentTarget, "description"),
-          goalAmount: valueFrom(event.currentTarget, "goalAmount")
+          name: valueFrom(form, "name"),
+          description: valueFrom(form, "description"),
+          goalAmount: valueFrom(form, "goalAmount")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshBoard();
       await loadPublicTenantView();
       setFlash("Campaign created.", false);
@@ -143,6 +158,7 @@
 
   async function handleDonationSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/transparency/donations", {
@@ -150,14 +166,14 @@
         auth: true,
         tenantId: getTenantId(),
         body: {
-          campaignId: valueFrom(event.currentTarget, "campaignId"),
-          donorName: valueFrom(event.currentTarget, "donorName"),
-          amount: valueFrom(event.currentTarget, "amount"),
-          note: valueFrom(event.currentTarget, "note")
+          campaignId: valueFrom(form, "campaignId"),
+          donorName: valueFrom(form, "donorName"),
+          amount: valueFrom(form, "amount"),
+          note: valueFrom(form, "note")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshBoard();
       await loadPublicTenantView();
       setFlash("Donation recorded.", false);
@@ -168,6 +184,7 @@
 
   async function handleExpenseSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/transparency/expenses", {
@@ -175,14 +192,14 @@
         auth: true,
         tenantId: getTenantId(),
         body: {
-          campaignId: valueFrom(event.currentTarget, "campaignId"),
-          category: valueFrom(event.currentTarget, "category"),
-          description: valueFrom(event.currentTarget, "description"),
-          amount: valueFrom(event.currentTarget, "amount")
+          campaignId: valueFrom(form, "campaignId"),
+          category: valueFrom(form, "category"),
+          description: valueFrom(form, "description"),
+          amount: valueFrom(form, "amount")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshBoard();
       await loadPublicTenantView();
       setFlash("Expense recorded.", false);
@@ -193,20 +210,21 @@
 
   async function handleRegisterSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       const result = await apiRequest("/api/auth/register", {
         method: "POST",
         body: {
-          name: valueFrom(event.currentTarget, "name"),
-          email: valueFrom(event.currentTarget, "email"),
-          password: valueFrom(event.currentTarget, "password")
+          name: valueFrom(form, "name"),
+          email: valueFrom(form, "email"),
+          password: valueFrom(form, "password")
         }
       });
 
       authToken = result.token;
       window.localStorage.setItem("petong_auth_token", authToken);
-      event.currentTarget.reset();
+      form.reset();
       await refreshPlatform();
       setFlash("Registered and authenticated.", false);
     } catch (error) {
@@ -216,19 +234,20 @@
 
   async function handleLoginSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       const result = await apiRequest("/api/auth/login", {
         method: "POST",
         body: {
-          email: valueFrom(event.currentTarget, "email"),
-          password: valueFrom(event.currentTarget, "password")
+          email: valueFrom(form, "email"),
+          password: valueFrom(form, "password")
         }
       });
 
       authToken = result.token;
       window.localStorage.setItem("petong_auth_token", authToken);
-      event.currentTarget.reset();
+      form.reset();
       await refreshPlatform();
       setFlash("Logged in.", false);
     } catch (error) {
@@ -236,23 +255,74 @@
     }
   }
 
+  async function handlePasswordResetRequestSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    try {
+      const result = await apiRequest("/api/auth/password-reset/request", {
+        method: "POST",
+        body: {
+          email: valueFrom(form, "email")
+        }
+      });
+
+      const tokenField = elements.passwordResetConfirmForm.querySelector('input[name="resetToken"]');
+      if (result.resetToken && tokenField) {
+        tokenField.value = result.resetToken;
+      }
+      setFlash(
+        result.resetToken
+          ? `Password reset token: ${result.resetToken}`
+          : "If the account exists, a password reset token has been issued.",
+        false
+      );
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handlePasswordResetConfirmSubmit(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    try {
+      const result = await apiRequest("/api/auth/password-reset/confirm", {
+        method: "POST",
+        body: {
+          resetToken: valueFrom(form, "resetToken"),
+          newPassword: valueFrom(form, "newPassword")
+        }
+      });
+
+      authToken = result.token;
+      window.localStorage.setItem("petong_auth_token", authToken);
+      form.reset();
+      await refreshPlatform();
+      setFlash("Password updated and session refreshed.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
   async function handleTenantSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/tenants", {
         method: "POST",
         auth: true,
         body: {
-          name: valueFrom(event.currentTarget, "name"),
-          slug: valueFrom(event.currentTarget, "slug"),
-          primaryColor: valueFrom(event.currentTarget, "primaryColor"),
-          secondaryColor: valueFrom(event.currentTarget, "secondaryColor"),
-          description: valueFrom(event.currentTarget, "description")
+          name: valueFrom(form, "name"),
+          slug: valueFrom(form, "slug"),
+          primaryColor: valueFrom(form, "primaryColor"),
+          secondaryColor: valueFrom(form, "secondaryColor"),
+          description: valueFrom(form, "description")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshPlatform();
       setFlash("NGO created.", false);
     } catch (error) {
@@ -262,16 +332,17 @@
 
   async function handleTenantThemeSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
-      await apiRequest(`/api/tenants/${valueFrom(event.currentTarget, "tenantId")}`, {
+      await apiRequest(`/api/tenants/${valueFrom(form, "tenantId")}`, {
         method: "PATCH",
         auth: true,
         body: {
-          logo: valueFrom(event.currentTarget, "logo"),
-          primaryColor: valueFrom(event.currentTarget, "primaryColor"),
-          secondaryColor: valueFrom(event.currentTarget, "secondaryColor"),
-          description: valueFrom(event.currentTarget, "description")
+          logo: valueFrom(form, "logo"),
+          primaryColor: valueFrom(form, "primaryColor"),
+          secondaryColor: valueFrom(form, "secondaryColor"),
+          description: valueFrom(form, "description")
         }
       });
 
@@ -285,14 +356,15 @@
 
   async function handleMemberSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
-      await apiRequest(`/api/tenants/${valueFrom(event.currentTarget, "tenantId")}/members`, {
+      await apiRequest(`/api/tenants/${valueFrom(form, "tenantId")}/members`, {
         method: "POST",
         auth: true,
         body: {
-          email: valueFrom(event.currentTarget, "email"),
-          role: valueFrom(event.currentTarget, "role")
+          email: valueFrom(form, "email"),
+          role: valueFrom(form, "role")
         }
       });
 
@@ -305,6 +377,7 @@
 
   async function handlePetSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/pets", {
@@ -312,26 +385,26 @@
         auth: true,
         tenantId: getTenantId(),
         body: {
-          name: valueFrom(event.currentTarget, "name"),
-          species: valueFrom(event.currentTarget, "species"),
-          breed: valueFrom(event.currentTarget, "breed"),
-          size: valueFrom(event.currentTarget, "size"),
-          city: valueFrom(event.currentTarget, "city"),
-          healthStatus: valueFrom(event.currentTarget, "healthStatus"),
-          specialNeeds: valueFrom(event.currentTarget, "specialNeeds"),
+          name: valueFrom(form, "name"),
+          species: valueFrom(form, "species"),
+          breed: valueFrom(form, "breed"),
+          size: valueFrom(form, "size"),
+          city: valueFrom(form, "city"),
+          healthStatus: valueFrom(form, "healthStatus"),
+          specialNeeds: valueFrom(form, "specialNeeds"),
           housingRequirement: "any",
           childrenFriendly: true,
           otherAnimalsFriendly: true,
-          description: valueFrom(event.currentTarget, "description"),
-          photoUrls: valueFrom(event.currentTarget, "photoUrls")
+          description: valueFrom(form, "description"),
+          photoUrls: valueFrom(form, "photoUrls")
             .split(",")
             .map((item) => item.trim())
             .filter(Boolean),
-          ageGroup: valueFrom(event.currentTarget, "ageGroup")
+          ageGroup: valueFrom(form, "ageGroup")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshBoard();
       setFlash("Pet registered.", false);
     } catch (error) {
@@ -341,20 +414,21 @@
 
   async function handleProfileSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/adoption-profile", {
         method: "POST",
         auth: true,
         body: {
-          housingType: valueFrom(event.currentTarget, "housingType"),
-          yardAvailability: parseBoolean(valueFrom(event.currentTarget, "yardAvailability")),
-          city: valueFrom(event.currentTarget, "city"),
-          hasChildren: parseBoolean(valueFrom(event.currentTarget, "hasChildren")),
-          hasOtherAnimals: parseBoolean(valueFrom(event.currentTarget, "hasOtherAnimals")),
-          petExperience: valueFrom(event.currentTarget, "petExperience"),
-          preferredPetSize: valueFrom(event.currentTarget, "preferredPetSize"),
-          canHandleSpecialNeeds: parseBoolean(valueFrom(event.currentTarget, "canHandleSpecialNeeds"))
+          housingType: valueFrom(form, "housingType"),
+          yardAvailability: parseBoolean(valueFrom(form, "yardAvailability")),
+          city: valueFrom(form, "city"),
+          hasChildren: parseBoolean(valueFrom(form, "hasChildren")),
+          hasOtherAnimals: parseBoolean(valueFrom(form, "hasOtherAnimals")),
+          petExperience: valueFrom(form, "petExperience"),
+          preferredPetSize: valueFrom(form, "preferredPetSize"),
+          canHandleSpecialNeeds: parseBoolean(valueFrom(form, "canHandleSpecialNeeds"))
         }
       });
 
@@ -367,6 +441,7 @@
 
   async function handleApplicationSubmit(event) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     try {
       await apiRequest("/api/applications", {
@@ -374,13 +449,13 @@
         auth: true,
         tenantId: getTenantId(),
         body: {
-          petId: valueFrom(event.currentTarget, "petId"),
-          adopterName: valueFrom(event.currentTarget, "adopterName"),
-          message: valueFrom(event.currentTarget, "message")
+          petId: valueFrom(form, "petId"),
+          adopterName: valueFrom(form, "adopterName"),
+          message: valueFrom(form, "message")
         }
       });
 
-      event.currentTarget.reset();
+      form.reset();
       await refreshBoard();
       await refreshMyApplications();
       setFlash("Application submitted.", false);
@@ -444,10 +519,24 @@
     elements.expenseList.innerHTML = presenter.renderExpenseCards(state.expenses);
   }
 
+  function renderGuestWorkspaceState() {
+    renderBoard({
+      pets: [],
+      applications: [],
+      transparency: null,
+      campaigns: [],
+      donations: [],
+      expenses: []
+    });
+  }
+
   function renderPlatform() {
     elements.authState.innerHTML = presenter.renderAuthState(session);
     elements.tenantList.innerHTML = presenter.renderTenantCards(session?.tenants ?? []);
     elements.tenantEditor.innerHTML = presenter.renderTenantEditor(session?.tenants?.[0] ?? null);
+    if (session?.tenants?.[0] && (!elements.tenantId.value.trim() || elements.tenantId.value === "ngo_red")) {
+      elements.tenantId.value = session.tenants[0].tenant.id;
+    }
   }
 
   async function loadPublicTenantView() {
@@ -461,6 +550,7 @@
       const response = await apiRequest(`/api/public/tenants/${slug}`, {});
       elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant, response.transparency);
       elements.publicPetsList.innerHTML = presenter.renderPublicPetCards(response.pets ?? []);
+      document.title = `${response.tenant.name} | Petong`;
       if (!elements.discoveryTenantSlug.value.trim()) {
         elements.discoveryTenantSlug.value = slug;
       }
@@ -563,30 +653,46 @@
     const pathname = window.location.pathname;
 
     if (pathname === "/") {
-      return { view: "landing", key: "landing", sections: [] };
+      return { view: "landing", key: "landing", sections: [], title: "Petong | Home" };
     }
 
-    if (pathname === "/login") {
-      return { view: "dashboard", key: "login", sections: ["access"] };
+    if (pathname === "/about") {
+      return { view: "about", key: "about", sections: [], title: "Petong | About" };
+    }
+
+    if (pathname === "/login" || pathname === "/register") {
+      return {
+        view: "dashboard",
+        key: "login",
+        sections: ["access"],
+        title: pathname === "/register" ? "Petong | Register" : "Petong | Login"
+      };
     }
 
     if (pathname === "/dashboard" || pathname === "/dashboard/ngo") {
       return {
         view: "dashboard",
         key: pathname === "/dashboard" ? "dashboard" : "dashboard-ngo",
-        sections: ["access", "ngo"]
+        sections: ["access", "ngo"],
+        title: pathname === "/dashboard" ? "Petong | Dashboard" : "Petong | NGO Management"
       };
     }
 
     if (pathname === "/dashboard/pets") {
-      return { view: "dashboard", key: "dashboard-pets", sections: ["access", "pets"] };
+      return {
+        view: "dashboard",
+        key: "dashboard-pets",
+        sections: ["access", "pets"],
+        title: "Petong | Pets"
+      };
     }
 
     if (pathname === "/dashboard/adoptions") {
       return {
         view: "dashboard",
         key: "dashboard-adoptions",
-        sections: ["access", "adoption"]
+        sections: ["access", "adoption"],
+        title: "Petong | Adoptions"
       };
     }
 
@@ -594,19 +700,21 @@
       return {
         view: "dashboard",
         key: "dashboard-transparency",
-        sections: ["access", "transparency"]
+        sections: ["access", "transparency"],
+        title: "Petong | Transparency"
       };
     }
 
     if (/^\/(?:ngo|t)\/[^/]+$/.test(pathname)) {
-      return { view: "public", key: "public", sections: [] };
+      return { view: "public", key: "public", sections: [], title: "Petong | Public NGO" };
     }
 
-    return { view: "landing", key: "landing", sections: [] };
+    return { view: "not-found", key: "not-found", sections: [], title: "Petong | Page Not Found" };
   }
 
   function applyPageLayout() {
     const route = currentRouteConfig();
+    document.title = route.title;
 
     for (const view of elements.views) {
       const allowed = String(view.dataset.view ?? "")
@@ -626,7 +734,13 @@
     }
 
     for (const link of elements.routeLinks) {
-      link.classList.toggle("is-active", link.dataset.routeLink === route.key);
+      const isActive = link.dataset.routeLink === route.key;
+      link.classList.toggle("is-active", isActive);
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
     }
   }
 

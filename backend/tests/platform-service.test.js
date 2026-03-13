@@ -189,3 +189,36 @@ test("allows ngo admins to update tenant branding and add members by email", () 
   assert.equal(updated.theme.primaryColor, "#123456");
   assert.equal(service.getTenantById(tenant.id).members.length, 2);
 });
+
+test("issues and consumes password reset tokens", () => {
+  const service = new PlatformService({ jwtSecret: "test-secret" });
+  service.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  });
+
+  const requested = service.requestPasswordReset({
+    email: "ana@example.com"
+  });
+  const reset = service.resetPassword({
+    resetToken: requested.resetToken,
+    newPassword: "new-password-123"
+  });
+
+  assert.equal(reset.ok, true);
+  assert.throws(
+    () =>
+      service.login({
+        email: "ana@example.com",
+        password: "password123"
+      }),
+    AuthenticationError
+  );
+  assert.ok(
+    service.login({
+      email: "ana@example.com",
+      password: "new-password-123"
+    }).token
+  );
+});

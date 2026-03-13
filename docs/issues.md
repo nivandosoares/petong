@@ -294,3 +294,20 @@ surface campaign progress and spending summaries in both the backend API and fro
 
 done criteria:
 visitors can view campaign totals, received donations, and recorded expenses for each NGO
+
+---
+
+ISSUE-018
+Implement password reset flow and auth e2e coverage
+
+status: closed
+priority: high
+type: feature
+
+description:
+add password reset request and confirm endpoints
+surface password reset forms on the authentication route
+cover signup, password reset, NGO creation, pet registration, public landing, and adoption interest in Selenium automation
+
+done criteria:
+users can reset passwords through the app flow and the Selenium suite exercises the full auth-to-public path

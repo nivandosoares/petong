@@ -25,6 +25,7 @@ class PlatformService {
     this.users = new Map();
     this.tenants = new Map();
     this.memberships = new Map();
+    this.passwordResetTokens = new Map();
     this.sequence = {
       user: 0,
       tenant: 0,
@@ -70,6 +71,67 @@ class PlatformService {
     }
 
     return {
+      user: sanitizeUser(user),
+      token: this.issueToken(user)
+    };
+  }
+
+  requestPasswordReset(input) {
+    assertRequired(input, ["email"]);
+
+    const normalizedEmail = normalizeEmail(input.email);
+    const user = Array.from(this.users.values()).find((entry) => entry.email === normalizedEmail);
+    if (!user) {
+      return { ok: true, resetToken: null };
+    }
+
+    const resetToken = crypto.randomBytes(24).toString("hex");
+    const tokenRecord = {
+      token: resetToken,
+      userId: user.id,
+      email: user.email,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      createdAt: new Date().toISOString()
+    };
+
+    for (const [token, record] of this.passwordResetTokens.entries()) {
+      if (record.userId === user.id) {
+        this.passwordResetTokens.delete(token);
+      }
+    }
+
+    this.passwordResetTokens.set(resetToken, tokenRecord);
+    this.#persist();
+    return { ok: true, resetToken };
+  }
+
+  resetPassword(input) {
+    assertRequired(input, ["resetToken", "newPassword"]);
+
+    const tokenRecord = this.passwordResetTokens.get(input.resetToken);
+    if (!tokenRecord) {
+      throw new ValidationError("Password reset token is invalid");
+    }
+
+    if (Date.parse(tokenRecord.expiresAt) < Date.now()) {
+      this.passwordResetTokens.delete(input.resetToken);
+      this.#persist();
+      throw new ValidationError("Password reset token has expired");
+    }
+
+    const user = this.users.get(tokenRecord.userId);
+    if (!user) {
+      this.passwordResetTokens.delete(input.resetToken);
+      this.#persist();
+      throw new NotFoundError("Password reset user was not found");
+    }
+
+    user.passwordHash = hashPassword(input.newPassword);
+    this.passwordResetTokens.delete(input.resetToken);
+    this.#persist();
+
+    return {
+      ok: true,
       user: sanitizeUser(user),
       token: this.issueToken(user)
     };
@@ -245,7 +307,8 @@ class PlatformService {
       sequence: { ...this.sequence },
       users: Array.from(this.users.values()).map((user) => ({ ...user })),
       tenants: Array.from(this.tenants.values()).map((tenant) => ({ ...tenant })),
-      memberships: Array.from(this.memberships.values()).map((membership) => ({ ...membership }))
+      memberships: Array.from(this.memberships.values()).map((membership) => ({ ...membership })),
+      passwordResetTokens: Array.from(this.passwordResetTokens.values()).map((token) => ({ ...token }))
     };
   }
 
@@ -272,6 +335,9 @@ class PlatformService {
     this.tenants = new Map((state.tenants ?? []).map((tenant) => [tenant.id, { ...tenant }]));
     this.memberships = new Map(
       (state.memberships ?? []).map((membership) => [membership.id, { ...membership }])
+    );
+    this.passwordResetTokens = new Map(
+      (state.passwordResetTokens ?? []).map((token) => [token.token, { ...token }])
     );
   }
 
