@@ -21,6 +21,14 @@ The autonomous loop uses `scripts/run-tests.sh` to discover and run project-spec
   - `bash tests/e2e/*.sh`
   - `pytest tests/e2e`
 
+## Optional browser automation
+
+The repo also includes an optional Selenium runner for manual browser interaction checks:
+
+- `python3 scripts/run-selenium-ui-tests.py`
+
+This is not part of the default test discovery flow because it depends on local Chrome and `chromedriver` availability.
+
 ## Run order
 
 The runner executes suites in this order:

@@ -25,3 +25,5 @@ All notable autonomous-agent changes should be recorded here.
 - Redesigned the dependency-free frontend to follow the `Lovable App.mhtml` landing-page reference while preserving the existing tenant, pet, and adoption workflows.
 - Added Sprint 6 donation transparency with tenant-scoped campaigns, donations, expenses, public totals, and dashboard management UI.
 - Split the frontend into route-based dashboard sections so NGO, pet, adoption, and transparency work no longer live on one oversized page.
+- Fixed direct shell routing for `/about` and `/register`, and added an optional Python Selenium UI smoke-test harness for Chrome WebDriver automation.
+- Expanded the Selenium harness to seed public-route data automatically and default to a visible Chrome session unless `--headless` is requested.

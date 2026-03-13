@@ -131,7 +131,7 @@ async function routeRequest(request, response, services) {
   const url = new URL(request.url, "http://localhost");
   const method = request.method ?? "GET";
 
-  if (method === "GET" && (STATIC_FILES[url.pathname] || isAppShellRoute(url.pathname))) {
+  if (method === "GET" && (STATIC_FILES[url.pathname] || isAppShellRoute(url.pathname) || shouldServeAppShell(url.pathname))) {
     writeStaticFile(response, STATIC_FILES[url.pathname] ?? STATIC_FILES["/"]);
     return;
   }
@@ -580,12 +580,18 @@ function authenticateRequest(request, platformService) {
 
 function isAppShellRoute(pathname) {
   return (
+    pathname === "/about" ||
     pathname === "/login" ||
+    pathname === "/register" ||
     pathname === "/dashboard" ||
     /^\/dashboard\/[^/]+$/.test(pathname) ||
     /^\/t\/[^/]+$/.test(pathname) ||
     /^\/ngo\/[^/]+$/.test(pathname)
   );
+}
+
+function shouldServeAppShell(pathname) {
+  return pathname !== "/health" && !pathname.startsWith("/api/") && !path.extname(pathname);
 }
 
 module.exports = {

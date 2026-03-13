@@ -51,6 +51,36 @@ test("serves dashboard subsection routes from the frontend shell", async () => {
   assert.match(response.body, /Operations Desk/);
 });
 
+test("serves informational and auth alias routes from the frontend shell", async () => {
+  const aboutResponse = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/about"
+  });
+  const registerResponse = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/register"
+  });
+
+  assert.equal(aboutResponse.statusCode, 200);
+  assert.match(aboutResponse.headers["content-type"], /text\/html/);
+  assert.match(aboutResponse.body, /About Petong/);
+
+  assert.equal(registerResponse.statusCode, 200);
+  assert.match(registerResponse.headers["content-type"], /text\/html/);
+  assert.match(registerResponse.body, /Authentication/);
+});
+
+test("serves the frontend shell for unknown non-api routes so the client 404 view can render", async () => {
+  const response = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/missing-route"
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.headers["content-type"], /text\/html/);
+  assert.match(response.body, /Page not found/);
+});
+
 test("returns public pets on the public tenant endpoint", async () => {
   const service = new AdoptionService();
   const transparencyService = new TransparencyService();
