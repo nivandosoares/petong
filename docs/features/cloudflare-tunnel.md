@@ -3,6 +3,7 @@
 This repository includes a Cloudflare Tunnel helper so you can expose a local development server and inspect the project remotely.
 
 The helper script is [scripts/start-cloudflare-tunnel.sh](/home/nivando/petrepo/scripts/start-cloudflare-tunnel.sh).
+The local preview server is [scripts/start-preview.sh](/home/nivando/petrepo/scripts/start-preview.sh).
 
 ## Installation gate
 
@@ -13,6 +14,12 @@ If the binary is missing, the script exits and tells the operator to request ins
 ## Quick preview tunnel
 
 For local live previews without a configured Cloudflare zone, use a quick tunnel:
+
+```bash
+bash scripts/start-preview.sh 3000
+```
+
+In a second shell:
 
 ```bash
 bash scripts/start-cloudflare-tunnel.sh quick http://localhost:3000

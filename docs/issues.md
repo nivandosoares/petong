@@ -102,3 +102,20 @@ cover config generation with automated tests
 
 done criteria:
 repository contains a tunnel helper, installation approval rules, and executable tests for the generated tunnel config
+
+---
+
+ISSUE-007
+Add a live preview page behind the tunnel
+
+status: closed
+priority: medium
+type: feature
+
+description:
+add a minimal local preview page that can be served immediately
+provide a simple command to host it on localhost
+verify the preview assets exist so the tunnel has real content to expose
+
+done criteria:
+repository contains a preview page and local preview server command for the tunnel workflow

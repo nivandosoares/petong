@@ -10,6 +10,7 @@ LOCAL_URL="${2:-${CF_TUNNEL_URL:-http://localhost:3000}}"
 TUNNEL_ID="${CF_TUNNEL_ID:-}"
 TUNNEL_HOSTNAME="${CF_TUNNEL_HOSTNAME:-}"
 CREDENTIALS_FILE="${CF_TUNNEL_CREDENTIALS_FILE:-}"
+CLOUDFLARED_BIN="${CF_TUNNEL_BIN:-${ROOT_DIR}/tools/cloudflared}"
 
 usage() {
   cat <<EOF
@@ -29,7 +30,12 @@ EOF
 }
 
 ensure_cloudflared() {
+  if [ -x "${CLOUDFLARED_BIN}" ]; then
+    return 0
+  fi
+
   if command -v cloudflared >/dev/null 2>&1; then
+    CLOUDFLARED_BIN="$(command -v cloudflared)"
     return 0
   fi
 
@@ -62,7 +68,7 @@ EOF
 case "${MODE}" in
   quick)
     ensure_cloudflared
-    exec cloudflared tunnel --url "${LOCAL_URL}"
+    exec "${CLOUDFLARED_BIN}" tunnel --url "${LOCAL_URL}"
     ;;
   print-config)
     ensure_named_env
@@ -73,7 +79,7 @@ case "${MODE}" in
     ensure_cloudflared
     ensure_named_env
     write_config
-    exec cloudflared tunnel --config "${CONFIG_FILE}" run "${TUNNEL_ID}"
+    exec "${CLOUDFLARED_BIN}" tunnel --config "${CONFIG_FILE}" run "${TUNNEL_ID}"
     ;;
   -h|--help|help)
     usage

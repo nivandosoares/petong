@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Petong Live Preview</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f1e8;
+        --panel: #fffaf2;
+        --ink: #1f2933;
+        --muted: #52606d;
+        --accent: #b85c38;
+        --accent-soft: #f4d7c8;
+        --line: #e5d6c8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(184, 92, 56, 0.18), transparent 28%),
+          linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+      }
+
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+
+      .hero {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 32px;
+        box-shadow: 0 18px 60px rgba(54, 44, 34, 0.08);
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font: 600 12px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2.4rem, 6vw, 4.6rem);
+        line-height: 0.95;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--line);
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 8px;
+        font: 600 0.9rem/1.2 system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .footer {
+        margin-top: 24px;
+        font: 500 0.95rem/1.5 system-ui, sans-serif;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <span class="eyebrow">Live Preview</span>
+        <h1>Petong is now reachable remotely.</h1>
+        <p>
+          This preview is being served locally and exposed through Cloudflare Tunnel so you can inspect the
+          project away from home while the product implementation continues.
+        </p>
+        <div class="grid">
+          <article class="card">
+            <strong>Current Backend</strong>
+            <p>Tenant-aware pet registration, adoption applications, and approval flow with isolation checks.</p>
+          </article>
+          <article class="card">
+            <strong>Automation</strong>
+            <p>Autonomous workcycle, test-driven runtime planning, and repo-managed remote preview workflow.</p>
+          </article>
+          <article class="card">
+            <strong>Next Step</strong>
+            <p>Expose the adoption domain through an HTTP API and then a real frontend on top of it.</p>
+          </article>
+        </div>
+        <p class="footer">
+          If you can read this page through the tunnel URL, the live preview path is working.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
