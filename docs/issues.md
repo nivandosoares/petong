@@ -20,7 +20,7 @@ repository contains the core files required to run unattended agent cycles local
 ISSUE-002
 Add project-specific test commands
 
-status: open
+status: closed
 priority: medium
 type: test
 
@@ -36,7 +36,7 @@ autonomous loop can run real project tests without manual command editing
 ISSUE-003
 Configure git identity and GitHub SSH remote
 
-status: open
+status: closed
 priority: high
 type: ops
 

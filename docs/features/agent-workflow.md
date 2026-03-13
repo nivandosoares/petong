@@ -16,6 +16,8 @@ This repository uses a local file-based workflow for unattended development cycl
 
 The workflow does not depend on GitHub Issues or external APIs. This keeps the loop runnable on a local machine without extra credentials.
 
-## Required follow-up
+## Test execution
 
-Replace placeholder test commands in `scripts/run-tests.sh` when the application structure is in place.
+`scripts/run-tests.sh` discovers backend, frontend, and e2e suites from repository conventions instead of hardcoded placeholder commands.
+
+See `docs/features/test-discovery.md` for the supported layouts and script names.
