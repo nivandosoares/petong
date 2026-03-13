@@ -18,14 +18,16 @@ Operational rules:
 10. Every implementation must include tests.
 11. Reuse existing code whenever possible.
 12. Run relevant tests before committing.
-13. Document changes in `CHANGELOG.md` and update `docs/AGENT_HANDOFF.md` when continuation or installation guidance changes.
-14. Use clear commit tags:
+13. Run `npm run test:e2e` when touching frontend UX and read `tmp/ui-audit/ui-audit-report.md` for detected gaps.
+14. Convert high/medium UI findings into issues/tests before closing a cycle.
+15. Document changes in `CHANGELOG.md` and update `docs/AGENT_HANDOFF.md` when continuation or installation guidance changes.
+16. Use clear commit tags:
    - `[feature]`
    - `[bugfix]`
    - `[refactor]`
    - `[test]`
    - `[docs]`
-15. Maintain tenant isolation across all entities and flows.
+17. Maintain tenant isolation across all entities and flows.
 
 Development loop:
 
