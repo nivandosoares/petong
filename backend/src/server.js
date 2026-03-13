@@ -204,6 +204,44 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  if ((method === "POST" || method === "PATCH") && url.pathname === "/api/adoption-profile") {
+    const body = await readJsonBody(request);
+    writeJson(response, 200, {
+      profile: services.adoptionService.upsertAdoptionProfile({
+        userId: user.id,
+        housingType: body.housingType,
+        yardAvailability: body.yardAvailability,
+        city: body.city,
+        hasChildren: body.hasChildren,
+        hasOtherAnimals: body.hasOtherAnimals,
+        petExperience: body.petExperience,
+        preferredPetSize: body.preferredPetSize,
+        canHandleSpecialNeeds: body.canHandleSpecialNeeds
+      })
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/adoption-profile") {
+    writeJson(response, 200, {
+      profile: services.adoptionService.getAdoptionProfile(user.id)
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/discovery") {
+    const tenantSlug = url.searchParams.get("tenantSlug");
+    const tenant = services.platformService.resolveTenantBySlug(tenantSlug);
+    writeJson(response, 200, {
+      tenant,
+      matches: services.adoptionService.getDiscoveryMatches({
+        userId: user.id,
+        tenantId: tenant.id
+      })
+    });
+    return;
+  }
+
   const tenantMatch = url.pathname.match(/^\/api\/tenants\/([^/]+)$/);
   if (method === "GET" && tenantMatch) {
     writeJson(response, 200, {
@@ -266,6 +304,9 @@ async function routeRequest(request, response, services) {
       city: body.city,
       healthStatus: body.healthStatus,
       specialNeeds: body.specialNeeds,
+      housingRequirement: body.housingRequirement,
+      childrenFriendly: body.childrenFriendly,
+      otherAnimalsFriendly: body.otherAnimalsFriendly,
       adoptionStatus: body.adoptionStatus,
       photoUrls: body.photoUrls,
       ageGroup: body.ageGroup
@@ -288,6 +329,9 @@ async function routeRequest(request, response, services) {
       city: body.city,
       healthStatus: body.healthStatus,
       specialNeeds: body.specialNeeds,
+      housingRequirement: body.housingRequirement,
+      childrenFriendly: body.childrenFriendly,
+      otherAnimalsFriendly: body.otherAnimalsFriendly,
       adoptionStatus: body.adoptionStatus,
       photoUrls: body.photoUrls,
       ageGroup: body.ageGroup

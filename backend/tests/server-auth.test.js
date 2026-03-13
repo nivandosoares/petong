@@ -147,6 +147,62 @@ test("updates tenant branding and serves public tenant data", async () => {
   assert.equal(publicTenant.body.tenant.description, "Updated rescue collective");
 });
 
+test("creates an adoption profile and returns discovery matches", async () => {
+  const platformService = new PlatformService({ jwtSecret: "test-secret" });
+  const adoptionService = new AdoptionService();
+  const registration = platformService.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  });
+  const tenant = platformService.createTenant({
+    creatorUserId: registration.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  adoptionService.registerPet({
+    tenantId: tenant.id,
+    name: "Luna",
+    species: "dog",
+    size: "medium",
+    city: "Sao Paulo",
+    childrenFriendly: true
+  });
+
+  const profile = await injectRequest(adoptionService, {
+    method: "POST",
+    url: "/api/adoption-profile",
+    headers: authHeaders(registration.token),
+    platformService,
+    body: {
+      housingType: "apartment",
+      yardAvailability: false,
+      city: "Sao Paulo",
+      hasChildren: true,
+      hasOtherAnimals: false,
+      petExperience: "experienced",
+      preferredPetSize: "medium",
+      canHandleSpecialNeeds: false
+    }
+  });
+
+  assert.equal(profile.statusCode, 200);
+
+  const discovery = await injectRequest(adoptionService, {
+    method: "GET",
+    url: "/api/discovery?tenantSlug=happy-paws",
+    headers: authHeaders(registration.token),
+    platformService
+  });
+
+  assert.equal(discovery.statusCode, 200);
+  assert.equal(discovery.body.matches[0].name, "Luna");
+});
+
 async function injectWithPlatform(
   options,
   platformService = new PlatformService({ jwtSecret: "test-secret" })

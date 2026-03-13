@@ -15,9 +15,13 @@
     tenantList: document.querySelector("#tenant-list"),
     tenantId: document.querySelector("#tenant-id"),
     refreshButton: document.querySelector("#refresh-button"),
+    profileForm: document.querySelector("#profile-form"),
+    discoveryTenantSlug: document.querySelector("#discovery-tenant-slug"),
+    refreshDiscoveryButton: document.querySelector("#refresh-discovery-button"),
     petForm: document.querySelector("#pet-form"),
     applicationForm: document.querySelector("#application-form"),
     petsList: document.querySelector("#pets-list"),
+    discoveryList: document.querySelector("#discovery-list"),
     publicPetsList: document.querySelector("#public-pets-list"),
     applicationsList: document.querySelector("#applications-list"),
     flash: document.querySelector("#flash")
@@ -32,6 +36,8 @@
   elements.tenantThemeForm.addEventListener("submit", handleTenantThemeSubmit);
   elements.memberForm.addEventListener("submit", handleMemberSubmit);
   elements.refreshButton.addEventListener("click", refreshBoard);
+  elements.profileForm.addEventListener("submit", handleProfileSubmit);
+  elements.refreshDiscoveryButton.addEventListener("click", refreshDiscovery);
   elements.petForm.addEventListener("submit", handlePetSubmit);
   elements.applicationForm.addEventListener("submit", handleApplicationSubmit);
   elements.applicationsList.addEventListener("click", handleApplicationAction);
@@ -40,6 +46,7 @@
   refreshPlatform().then(async () => {
     await loadPublicTenantView();
     await refreshBoard();
+    await refreshDiscovery();
   });
 
   async function refreshPlatform() {
@@ -207,6 +214,9 @@
           city: valueFrom(event.currentTarget, "city"),
           healthStatus: valueFrom(event.currentTarget, "healthStatus"),
           specialNeeds: valueFrom(event.currentTarget, "specialNeeds"),
+          housingRequirement: "any",
+          childrenFriendly: true,
+          otherAnimalsFriendly: true,
           description: valueFrom(event.currentTarget, "description"),
           photoUrls: valueFrom(event.currentTarget, "photoUrls")
             .split(",")
@@ -219,6 +229,32 @@
       event.currentTarget.reset();
       await refreshBoard();
       setFlash("Pet registered.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleProfileSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest("/api/adoption-profile", {
+        method: "POST",
+        auth: true,
+        body: {
+          housingType: valueFrom(event.currentTarget, "housingType"),
+          yardAvailability: parseBoolean(valueFrom(event.currentTarget, "yardAvailability")),
+          city: valueFrom(event.currentTarget, "city"),
+          hasChildren: parseBoolean(valueFrom(event.currentTarget, "hasChildren")),
+          hasOtherAnimals: parseBoolean(valueFrom(event.currentTarget, "hasOtherAnimals")),
+          petExperience: valueFrom(event.currentTarget, "petExperience"),
+          preferredPetSize: valueFrom(event.currentTarget, "preferredPetSize"),
+          canHandleSpecialNeeds: parseBoolean(valueFrom(event.currentTarget, "canHandleSpecialNeeds"))
+        }
+      });
+
+      await refreshDiscovery();
+      setFlash("Adoption profile saved.", false);
     } catch (error) {
       setFlash(error.message, true);
     }
@@ -306,9 +342,35 @@
       const response = await apiRequest(`/api/public/tenants/${slug}`, {});
       elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant);
       elements.publicPetsList.innerHTML = presenter.renderPublicPetCards(response.pets ?? []);
+      if (!elements.discoveryTenantSlug.value.trim()) {
+        elements.discoveryTenantSlug.value = slug;
+      }
     } catch (error) {
       elements.publicTenantView.innerHTML = "";
       elements.publicPetsList.innerHTML = "";
+      setFlash(error.message, true);
+    }
+  }
+
+  async function refreshDiscovery() {
+    if (!authToken) {
+      elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches([]);
+      return;
+    }
+
+    const slug = elements.discoveryTenantSlug.value.trim() || publicTenantSlug();
+    if (!slug) {
+      elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches([]);
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/api/discovery?tenantSlug=${encodeURIComponent(slug)}`, {
+        auth: true
+      });
+      elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches(response.matches ?? []);
+    } catch (error) {
+      elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches([]);
       setFlash(error.message, true);
     }
   }
@@ -353,6 +415,10 @@
   function publicTenantSlug() {
     const match = window.location.pathname.match(/^\/(?:ngo|t)\/([^/]+)$/);
     return match ? match[1] : "";
+  }
+
+  function parseBoolean(value) {
+    return String(value).trim().toLowerCase() === "true";
   }
 
   function setFlash(message, isError) {

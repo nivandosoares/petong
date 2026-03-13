@@ -206,6 +206,54 @@
       <section class="layout">
         <article class="panel">
           <div class="panel-header">
+            <h2>Adoption Discovery</h2>
+            <p>Create an adoption profile and view compatibility-ranked pets.</p>
+          </div>
+          <form id="profile-form" class="stack">
+            <label class="field">
+              <span>Housing Type</span>
+              <input name="housingType" value="apartment" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Yard Availability</span>
+              <input name="yardAvailability" value="false" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>City</span>
+              <input name="city" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Has Children</span>
+              <input name="hasChildren" value="false" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Has Other Animals</span>
+              <input name="hasOtherAnimals" value="false" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Pet Experience</span>
+              <input name="petExperience" value="beginner" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Preferred Pet Size</span>
+              <input name="preferredPetSize" value="medium" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Can Handle Special Needs</span>
+              <input name="canHandleSpecialNeeds" value="false" autocomplete="off">
+            </label>
+            <button class="button" type="submit">Save Profile</button>
+          </form>
+          <label class="field">
+            <span>Discovery Tenant Slug</span>
+            <input id="discovery-tenant-slug" value="" autocomplete="off">
+          </label>
+          <button id="refresh-discovery-button" class="button button-secondary" type="button">Refresh Matches</button>
+          <div id="discovery-list" class="list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
             <h2>Pets</h2>
             <p>Inventory for the active tenant only.</p>
           </div>

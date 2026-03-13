@@ -89,6 +89,7 @@ const presenter = {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderDiscoveryMatches,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
@@ -200,6 +201,30 @@ function renderPublicPetCards(pets) {
             <span class="badge">${escapeHtml(pet.size || "unknown")}</span>
           </div>
           <p class="card-meta">${escapeHtml(pet.description || "No description yet.")}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderDiscoveryMatches(matches) {
+  if (!matches.length) {
+    return '<div class="empty">No discovery matches yet. Complete the profile and pick a tenant.</div>';
+  }
+
+  return matches
+    .map(
+      (match) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(match.name)}</h3>
+              <p class="card-meta">${escapeHtml(match.species)} • ${escapeHtml(match.city || "unknown city")}</p>
+            </div>
+            <span class="badge">Score ${escapeHtml(String(match.compatibilityScore))}</span>
+          </div>
+          <p class="card-meta">${escapeHtml(match.description || "No description yet.")}</p>
+          <p class="card-meta">Why: ${escapeHtml((match.compatibilityNotes || []).join(", "))}</p>
         </article>
       `
     )

@@ -7,6 +7,7 @@ const {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderDiscoveryMatches,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
@@ -115,5 +116,18 @@ test("renders tenant editor and public landing", () => {
       }
     ]),
     /Luna/
+  );
+
+  assert.match(
+    renderDiscoveryMatches([
+      {
+        name: "Luna",
+        species: "dog",
+        city: "Sao Paulo",
+        compatibilityScore: 8,
+        compatibilityNotes: ["same city", "matches preferred size"]
+      }
+    ]),
+    /Score 8/
   );
 });

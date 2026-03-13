@@ -243,3 +243,38 @@ plan the first photo support slice without weakening tenant isolation
 
 done criteria:
 NGOs can manage richer pet records and the public tenant experience can list available pets
+
+---
+
+ISSUE-015
+Implement Sprint 4 adoption discovery
+
+status: closed
+priority: high
+type: feature
+
+description:
+add adoption profiles and compatibility-based discovery
+score recommendations using housing, location, children, other animals, size, and special-needs suitability
+avoid using sex and age as primary ranking criteria
+surface recommendations in the frontend for real user interaction
+
+done criteria:
+users can save an adoption profile and receive ranked pet recommendations in the running application
+
+---
+
+ISSUE-016
+Implement Sprint 5 adoption application workflow
+
+status: open
+priority: high
+type: feature
+
+description:
+expand adoption applications to support workflow states, reviewer actions, and status history
+allow NGO staff to review, approve, reject, and annotate applications
+surface status progression in the frontend for adopters and staff
+
+done criteria:
+the application workflow supports pending, under_review, approved, and rejected states with tracked history

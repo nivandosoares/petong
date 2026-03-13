@@ -19,3 +19,4 @@ All notable autonomous-agent changes should be recorded here.
 - Added Sprint 2 NGO management, branding updates, member administration, and public tenant landing pages.
 - Added a formal database `code/doc/test` pipeline and an agent handoff/install guide for future continuation.
 - Added Sprint 3 pet management with richer pet fields, archiving, and public tenant pet listings.
+- Added Sprint 4 adoption discovery with profile-driven compatibility matching and discovery UI.
