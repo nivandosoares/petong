@@ -7,6 +7,7 @@ The autonomous loop uses `scripts/run-tests.sh` to discover and run project-spec
 - Backend:
   - `npm run test:backend` from the repository root
   - `npm --prefix backend run test`
+  - `bash tests/backend/*.sh`
   - `pytest` when `pyproject.toml` or `pytest.ini` exists at the root
   - `pytest backend/tests`
   - `go test ./...`
@@ -17,6 +18,7 @@ The autonomous loop uses `scripts/run-tests.sh` to discover and run project-spec
 - End-to-end:
   - `npm run test:e2e` from the repository root
   - `npm --prefix frontend run test:e2e`
+  - `bash tests/e2e/*.sh`
   - `pytest tests/e2e`
 
 ## Run order

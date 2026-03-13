@@ -48,3 +48,21 @@ push main branch
 
 done criteria:
 repository can create commits locally and push to GitHub over SSH
+
+---
+
+ISSUE-004
+Automate runtime planning from test outcomes
+
+status: closed
+priority: high
+type: feature
+
+description:
+make the autonomous loop derive the next action from the latest test results
+continue automatically when tests pass
+prioritize test repair when failures are caused by current work
+stop only for blockers or human decisions
+
+done criteria:
+agent loop writes a next-cycle plan from test output and exits only on blocker states

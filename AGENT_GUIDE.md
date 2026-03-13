@@ -33,21 +33,24 @@ The agent must not, without explicit human approval:
 ## Execution loop
 
 1. Read `docs/issues.md`.
-2. Select the first issue with `status: open`.
-3. Mark it `status: in_progress`.
-4. Implement the minimal viable solution.
-5. Run relevant tests.
-6. Fix failures caused by the change.
-7. Update docs in `docs/` and `CHANGELOG.md`.
-8. Bump `VERSION` patch number.
-9. Commit with one of these tags:
+2. Read `tmp/agent-loop/next-action.md` when it exists.
+3. If the runtime plan says `status: fix_tests`, treat the failing tests as the active work item before selecting a new issue.
+4. If the runtime plan says `status: blocked`, stop and request human input.
+5. Otherwise select the first issue with `status: open`.
+6. Mark the active issue `status: in_progress`.
+7. Implement the minimal viable solution.
+8. Run relevant tests.
+9. Fix failures caused by the change.
+10. Update docs in `docs/` and `CHANGELOG.md`.
+11. Bump `VERSION` patch number.
+12. Commit with one of these tags:
    - `[feature]`
    - `[bugfix]`
    - `[refactor]`
    - `[test]`
    - `[docs]`
-10. Mark the issue `status: closed`.
-11. Repeat.
+13. Mark the issue `status: closed`.
+14. Repeat.
 
 ## Escalation conditions
 
@@ -65,3 +68,4 @@ Stop and request human input if:
 - `docs/features/`: feature notes and implementation decisions
 - `CHANGELOG.md`: chronological delivery log
 - `VERSION`: current semver version
+- `tmp/agent-loop/next-action.md`: generated runtime plan from the latest test results

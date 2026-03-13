@@ -37,12 +37,34 @@ run_npm_script_if_present() {
   return 1
 }
 
+run_shell_tests_if_present() {
+  local label="$1"
+  local dir="$2"
+  local found=0
+  local test_file=""
+
+  if [ ! -d "${dir}" ]; then
+    return 1
+  fi
+
+  while IFS= read -r test_file; do
+    found=1
+    run_suite "${label}" bash "${test_file}"
+  done < <(find "${dir}" -maxdepth 1 -type f -name '*.sh' | sort)
+
+  [ "${found}" -eq 1 ]
+}
+
 detect_backend() {
   if run_npm_script_if_present "backend" "${ROOT_DIR}" "test:backend"; then
     return 0
   fi
 
   if run_npm_script_if_present "backend" "${ROOT_DIR}/backend" "test"; then
+    return 0
+  fi
+
+  if run_shell_tests_if_present "backend" "${ROOT_DIR}/tests/backend"; then
     return 0
   fi
 
@@ -112,6 +134,10 @@ detect_e2e() {
   fi
 
   if run_npm_script_if_present "e2e" "${ROOT_DIR}/frontend" "test:e2e"; then
+    return 0
+  fi
+
+  if run_shell_tests_if_present "e2e" "${ROOT_DIR}/tests/e2e"; then
     return 0
   fi
 
