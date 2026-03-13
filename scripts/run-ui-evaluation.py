@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -107,6 +108,14 @@ def build_driver(headless: bool):
     return webdriver.Chrome(options=options)
 
 
+def click_element(driver, element):
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+    try:
+        element.click()
+    except Exception:
+        driver.execute_script("arguments[0].click();", element)
+
+
 def api_request(base_url: str, path: str, method: str = "GET", body: dict | None = None, token: str | None = None, tenant_id: str | None = None):
     headers = {}
     data = None
@@ -195,6 +204,119 @@ def evaluate_route(driver, route):
     }
 
 
+def is_internal_page_href(base_url: str, href: str) -> bool:
+    if not href or href.startswith("#"):
+        return False
+    parsed = urllib.parse.urlparse(href)
+    base = urllib.parse.urlparse(base_url)
+    if parsed.scheme and parsed.netloc and (parsed.scheme != base.scheme or parsed.netloc != base.netloc):
+        return False
+    path = parsed.path or "/"
+    if path in {"/styles.css", "/favicon.svg"}:
+        return False
+    if "." in Path(path).name and not path.endswith(".html"):
+        return False
+    return True
+
+
+def collect_visible_internal_links(driver, base_url: str):
+    _, _, By, _, _ = require_selenium()
+    links = []
+    seen = set()
+
+    for element in driver.find_elements(By.CSS_SELECTOR, "a[href]"):
+        href = element.get_attribute("href") or ""
+        if not is_internal_page_href(base_url, href):
+            continue
+        normalized = urllib.parse.urljoin(base_url.rstrip("/") + "/", urllib.parse.urlparse(href).path.lstrip("/"))
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        links.append({"href": normalized, "text": (element.text or "").strip()})
+
+    return links
+
+
+def audit_route_links(driver, route, base_url: str):
+    _, _, By, WebDriverWait, EC = require_selenium()
+    findings = []
+
+    driver.get(route["url"])
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "main")))
+    source_title = driver.title
+    source_links = collect_visible_internal_links(driver, base_url)
+
+    for link in source_links:
+        driver.get(link["href"])
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "main")))
+        title = driver.title
+        main_text = driver.find_element(By.TAG_NAME, "main").text
+        if "Page Not Found" in title or "Page not found" in main_text:
+            findings.append(
+                {
+                    "severity": "high",
+                    "code": "dead-link",
+                    "message": f"Visible link from '{source_title}' to '{link['href']}' lands on the not-found view",
+                }
+            )
+
+    return {
+        "url": route["url"],
+        "linksChecked": len(source_links),
+        "findingCount": len(findings),
+        "findings": findings,
+    }
+
+
+def evaluate_human_journeys(driver, base_url: str, seeded: dict):
+    _, _, By, WebDriverWait, EC = require_selenium()
+    findings = []
+
+    driver.get(f"{base_url.rstrip('/')}/")
+    click_element(driver, driver.find_element(By.CSS_SELECTOR, 'a[href="/about"]'))
+    WebDriverWait(driver, 10).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "main"), "Built for rescue teams that need speed and trust")
+    )
+
+    driver.get(f"{base_url.rstrip('/')}/")
+    click_element(driver, driver.find_element(By.CSS_SELECTOR, 'a[href="/dashboard"]'))
+    WebDriverWait(driver, 10).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "main"), "Authentication")
+    )
+
+    click_element(driver, driver.find_element(By.CSS_SELECTOR, '[data-route-link="dashboard-adoptions"]'))
+    WebDriverWait(driver, 10).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "main"), "Adoption Discovery")
+    )
+
+    driver.get(f"{base_url.rstrip('/')}/missing-route")
+    click_element(driver, driver.find_element(By.CSS_SELECTOR, 'a[href="/about"]'))
+    WebDriverWait(driver, 10).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "main"), "Built for rescue teams that need speed and trust")
+    )
+
+    driver.get(f"{base_url.rstrip('/')}/t/{seeded['slug']}")
+    WebDriverWait(driver, 10).until(
+        EC.text_to_be_present_in_element((By.TAG_NAME, "main"), seeded["tenant_name"])
+    )
+
+    title = driver.title
+    if seeded["tenant_name"] not in title:
+        findings.append(
+            {
+                "severity": "medium",
+                "code": "public-title",
+                "message": f"Expected public route title to include '{seeded['tenant_name']}', got '{title}'",
+            }
+        )
+
+    return {
+        "journey": "visitor-navigation",
+        "findingCount": len(findings),
+        "findings": findings,
+    }
+
+
 def main():
     args = parse_args()
     report_path = Path(args.report)
@@ -203,6 +325,8 @@ def main():
     temp_dir = None
     driver = None
     results = []
+    link_audits = []
+    journeys = []
     try:
         if args.start_backend:
             backend, temp_dir = start_backend(args.base_url)
@@ -212,6 +336,19 @@ def main():
             {"url": f"{args.base_url.rstrip('/')}/", "title": "Home", "text": "Every adoption workflow deserves a warmer front door.", "active_link": "/"},
             {"url": f"{args.base_url.rstrip('/')}/about", "title": "About", "text": "Built for rescue teams that need speed and trust", "active_link": "/about"},
             {"url": f"{args.base_url.rstrip('/')}/login", "title": "Login", "text": "Authentication"},
+            {"url": f"{args.base_url.rstrip('/')}/register", "title": "Register", "text": "Authentication"},
+            {
+                "url": f"{args.base_url.rstrip('/')}/dashboard",
+                "title": "Dashboard",
+                "text": "Authentication",
+                "active_link": "/dashboard",
+            },
+            {
+                "url": f"{args.base_url.rstrip('/')}/dashboard/ngo",
+                "title": "NGO Management",
+                "text": "NGO Management",
+                "active_link": "/dashboard/ngo",
+            },
             {
                 "url": f"{args.base_url.rstrip('/')}/dashboard/transparency",
                 "title": "Transparency",
@@ -224,12 +361,23 @@ def main():
                 "text": "No pets registered for this tenant yet.",
                 "active_link": "/dashboard/pets",
             },
+            {
+                "url": f"{args.base_url.rstrip('/')}/dashboard/adoptions",
+                "title": "Adoptions",
+                "text": "No discovery matches yet.",
+                "active_link": "/dashboard/adoptions",
+            },
             {"url": f"{args.base_url.rstrip('/')}/t/{seeded['slug']}", "title": seeded["tenant_name"], "text": seeded["tenant_name"]},
             {"url": f"{args.base_url.rstrip('/')}/missing-route", "title": "Page Not Found", "text": "Page not found"},
         ]
         driver = build_driver(args.headless)
         for route in routes:
             results.append(evaluate_route(driver, route))
+        for route in routes:
+            if route["title"] == "Page Not Found":
+                continue
+            link_audits.append(audit_route_links(driver, route, args.base_url))
+        journeys.append(evaluate_human_journeys(driver, args.base_url, seeded))
     finally:
         if driver:
             driver.quit()
@@ -238,7 +386,11 @@ def main():
     report = {
         "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "routes": results,
-        "totalFindings": sum(item["findingCount"] for item in results),
+        "linkAudits": link_audits,
+        "journeys": journeys,
+        "totalFindings": sum(item["findingCount"] for item in results)
+        + sum(item["findingCount"] for item in link_audits)
+        + sum(item["findingCount"] for item in journeys),
     }
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 

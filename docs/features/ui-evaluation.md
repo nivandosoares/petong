@@ -13,6 +13,8 @@ It evaluates:
 - active navigation semantics through `aria-current`
 - visible route-specific content
 - browser console errors during route rendering
+- visible internal links that should resolve to real pages instead of the not-found view
+- user-style navigation journeys that move through buttons and tabs instead of direct URL entry
 
 ## Files
 
@@ -51,3 +53,15 @@ When the routine starts the backend itself, it seeds:
 - a fundraising campaign
 
 This allows public-route evaluation without manual setup.
+
+## Dead-link focus
+
+The evaluator now audits the visible internal links exposed on:
+
+- landing
+- about
+- login/register
+- dashboard sections
+- seeded public NGO pages
+
+If any of those links land on the not-found screen, the run fails with a `dead-link` finding in the JSON report.

@@ -61,6 +61,7 @@ Optional Selenium UI smoke tests:
 python3 -m pip install -r requirements-ui.txt
 CHROME_BINARY=/usr/bin/chromium python3 scripts/run-selenium-ui-tests.py --start-backend
 BASE_URL=http://127.0.0.1:3001 CHROME_BINARY=/usr/bin/chromium python3 frontend/tests/selenium_ui_sequences.py
+CHROME_BINARY=/usr/bin/chromium python3 scripts/run-ui-evaluation.py --start-backend --headless
 ```
 
 Run the app:
