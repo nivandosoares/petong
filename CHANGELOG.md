@@ -13,3 +13,4 @@ All notable autonomous-agent changes should be recorded here.
 - Added a Cloudflare Tunnel helper for remote live previews and enforced explicit approval before future software installation steps.
 - Added a lightweight live preview page and local server so the Cloudflare tunnel exposes real content immediately.
 - Added a tenant-aware HTTP API for pets and adoption applications with backend integration tests.
+- Added the first interactive frontend for the adoption workflow, served by the backend with frontend tests.

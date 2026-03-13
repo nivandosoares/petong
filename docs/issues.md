@@ -137,3 +137,20 @@ cover the API with integration-style backend tests
 
 done criteria:
 repository contains a runnable HTTP API for the adoption workflow with automated tests
+
+---
+
+ISSUE-009
+Add the first interactive frontend for the adoption workflow
+
+status: closed
+priority: high
+type: feature
+
+description:
+serve a real frontend from the current backend stack
+provide tenant switching, pet registration, application submission, and approval actions
+test both frontend rendering helpers and backend static asset delivery
+
+done criteria:
+repository contains a usable browser UI backed by the adoption API with automated backend and frontend tests

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Petong Adoption Desk</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Petong</p>
+        <h1>Adoption Desk</h1>
+        <p class="lede">
+          A tenant-aware rescue workspace for managing pets and adoption applications from one screen.
+        </p>
+      </section>
+
+      <section class="toolbar panel">
+        <label class="field">
+          <span>Tenant ID</span>
+          <input id="tenant-id" name="tenantId" value="ngo_red" autocomplete="off">
+        </label>
+        <button id="refresh-button" class="button button-secondary" type="button">Refresh Board</button>
+      </section>
+
+      <section id="flash" class="flash" aria-live="polite"></section>
+
+      <section class="layout">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Register Pet</h2>
+            <p>Add animals to the active tenant inventory.</p>
+          </div>
+          <form id="pet-form" class="stack">
+            <label class="field">
+              <span>Name</span>
+              <input name="name" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Species</span>
+              <input name="species" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Age Group</span>
+              <input name="ageGroup" placeholder="adult, puppy, senior" autocomplete="off">
+            </label>
+            <button class="button" type="submit">Add Pet</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Submit Application</h2>
+            <p>Create a new adoption request for a listed pet.</p>
+          </div>
+          <form id="application-form" class="stack">
+            <label class="field">
+              <span>Pet ID</span>
+              <input name="petId" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Adopter Name</span>
+              <input name="adopterName" required autocomplete="off">
+            </label>
+            <button class="button" type="submit">Submit Application</button>
+          </form>
+        </article>
+      </section>
+
+      <section class="layout">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Pets</h2>
+            <p>Inventory for the active tenant only.</p>
+          </div>
+          <div id="pets-list" class="list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Applications</h2>
+            <p>Approve requests without crossing tenant boundaries.</p>
+          </div>
+          <div id="applications-list" class="list"></div>
+        </article>
+      </section>
+    </main>
+
+    <script src="/presenter.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

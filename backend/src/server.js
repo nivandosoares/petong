@@ -1,6 +1,8 @@
 "use strict";
 
+const fs = require("node:fs");
 const http = require("node:http");
+const path = require("node:path");
 const { Readable } = require("node:stream");
 
 const {
@@ -9,6 +11,20 @@ const {
   TenantMismatchError,
   ValidationError
 } = require("./adoption-service");
+
+const ROOT_DIR = path.resolve(__dirname, "..", "..");
+const FRONTEND_DIR = path.join(ROOT_DIR, "frontend");
+const STATIC_FILES = {
+  "/": path.join(FRONTEND_DIR, "index.html"),
+  "/app.js": path.join(FRONTEND_DIR, "app.js"),
+  "/presenter.js": path.join(FRONTEND_DIR, "presenter.js"),
+  "/styles.css": path.join(FRONTEND_DIR, "styles.css")
+};
+const CONTENT_TYPES = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8"
+};
 
 function createApp(options = {}) {
   const service = options.service ?? new AdoptionService();
@@ -77,6 +93,11 @@ async function routeRequest(request, response, service) {
   const url = new URL(request.url, "http://localhost");
   const method = request.method ?? "GET";
 
+  if (method === "GET" && STATIC_FILES[url.pathname]) {
+    writeStaticFile(response, STATIC_FILES[url.pathname]);
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/health") {
     writeJson(response, 200, { status: "ok" });
     return;
@@ -139,6 +160,15 @@ async function routeRequest(request, response, service) {
   writeError(response, 404, "Route not found");
 }
 
+function writeStaticFile(response, filePath) {
+  const extension = path.extname(filePath);
+  const contentType = CONTENT_TYPES[extension] ?? "application/octet-stream";
+  const body = fs.readFileSync(filePath, "utf8");
+
+  response.writeHead(200, { "content-type": contentType });
+  response.end(body);
+}
+
 function startServer(port = 3001) {
   const { server, service } = createApp();
 
@@ -168,10 +198,11 @@ async function injectRequest(service, options) {
       },
       end(body) {
         const text = body ? String(body) : "";
+        const contentType = this.headers["content-type"] ?? "";
         resolve({
           statusCode: this.statusCode,
           headers: this.headers,
-          body: text ? JSON.parse(text) : null
+          body: contentType.includes("application/json") && text ? JSON.parse(text) : text
         });
       }
     };

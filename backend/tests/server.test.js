@@ -16,6 +16,28 @@ test("reports health without a tenant header", async () => {
   assert.deepEqual(response.body, { status: "ok" });
 });
 
+test("serves the frontend shell at the root route", async () => {
+  const response = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/"
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.headers["content-type"], /text\/html/);
+  assert.match(response.body, /Adoption Desk/);
+});
+
+test("serves the browser presenter bundle", async () => {
+  const response = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/presenter.js"
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.headers["content-type"], /application\/javascript/);
+  assert.match(response.body, /PetongPresenter/);
+});
+
 test("creates and lists tenant-scoped pets through the API", async () => {
   const service = new AdoptionService();
 
