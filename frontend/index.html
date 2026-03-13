@@ -12,8 +12,75 @@
         <p class="eyebrow">Petong</p>
         <h1>Adoption Desk</h1>
         <p class="lede">
-          A tenant-aware rescue workspace for managing pets and adoption applications from one screen.
+          A tenant-aware rescue workspace for managing NGOs, memberships, pets, and adoption applications.
         </p>
+      </section>
+
+      <section class="layout">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Authentication</h2>
+            <p>Register, log in, and persist JWT access in the browser.</p>
+          </div>
+          <div id="auth-state" class="list"></div>
+          <form id="register-form" class="stack">
+            <label class="field">
+              <span>Name</span>
+              <input name="name" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input name="email" type="email" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Password</span>
+              <input name="password" type="password" required>
+            </label>
+            <button class="button" type="submit">Register</button>
+          </form>
+          <form id="login-form" class="stack">
+            <label class="field">
+              <span>Email</span>
+              <input name="email" type="email" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Password</span>
+              <input name="password" type="password" required>
+            </label>
+            <button class="button button-secondary" type="submit">Login</button>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>NGO Management</h2>
+            <p>Create NGOs, inspect your memberships, and prepare the public tenant route.</p>
+          </div>
+          <form id="tenant-form" class="stack">
+            <label class="field">
+              <span>NGO Name</span>
+              <input name="name" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Slug</span>
+              <input name="slug" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Primary Color</span>
+              <input name="primaryColor" value="#0f766e" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Secondary Color</span>
+              <input name="secondaryColor" value="#f59e0b" required autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Description</span>
+              <input name="description" required autocomplete="off">
+            </label>
+            <button class="button" type="submit">Create NGO</button>
+          </form>
+          <div id="tenant-list" class="list"></div>
+        </article>
       </section>
 
       <section class="toolbar panel">

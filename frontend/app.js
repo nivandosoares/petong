@@ -4,6 +4,11 @@
   const presenter = window.PetongPresenter;
 
   const elements = {
+    authState: document.querySelector("#auth-state"),
+    registerForm: document.querySelector("#register-form"),
+    loginForm: document.querySelector("#login-form"),
+    tenantForm: document.querySelector("#tenant-form"),
+    tenantList: document.querySelector("#tenant-list"),
     tenantId: document.querySelector("#tenant-id"),
     refreshButton: document.querySelector("#refresh-button"),
     petForm: document.querySelector("#pet-form"),
@@ -13,12 +18,37 @@
     flash: document.querySelector("#flash")
   };
 
+  let authToken = window.localStorage.getItem("petong_auth_token");
+  let session = null;
+
+  elements.registerForm.addEventListener("submit", handleRegisterSubmit);
+  elements.loginForm.addEventListener("submit", handleLoginSubmit);
+  elements.tenantForm.addEventListener("submit", handleTenantSubmit);
   elements.refreshButton.addEventListener("click", refreshBoard);
   elements.petForm.addEventListener("submit", handlePetSubmit);
   elements.applicationForm.addEventListener("submit", handleApplicationSubmit);
   elements.applicationsList.addEventListener("click", handleApplicationAction);
 
-  refreshBoard();
+  refreshPlatform().then(refreshBoard);
+
+  async function refreshPlatform() {
+    if (!authToken) {
+      session = null;
+      renderPlatform();
+      return;
+    }
+
+    try {
+      session = await apiRequest("/api/session", { auth: true });
+      renderPlatform();
+    } catch (error) {
+      authToken = null;
+      session = null;
+      window.localStorage.removeItem("petong_auth_token");
+      renderPlatform();
+      setFlash(error.message, true);
+    }
+  }
 
   async function refreshBoard() {
     try {
@@ -34,6 +64,75 @@
         applications: applicationsResponse.applications
       });
       setFlash(`Loaded tenant ${tenantId}.`, false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleRegisterSubmit(event) {
+    event.preventDefault();
+
+    try {
+      const result = await apiRequest("/api/auth/register", {
+        method: "POST",
+        body: {
+          name: valueFrom(event.currentTarget, "name"),
+          email: valueFrom(event.currentTarget, "email"),
+          password: valueFrom(event.currentTarget, "password")
+        }
+      });
+
+      authToken = result.token;
+      window.localStorage.setItem("petong_auth_token", authToken);
+      event.currentTarget.reset();
+      await refreshPlatform();
+      setFlash("Registered and authenticated.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleLoginSubmit(event) {
+    event.preventDefault();
+
+    try {
+      const result = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: {
+          email: valueFrom(event.currentTarget, "email"),
+          password: valueFrom(event.currentTarget, "password")
+        }
+      });
+
+      authToken = result.token;
+      window.localStorage.setItem("petong_auth_token", authToken);
+      event.currentTarget.reset();
+      await refreshPlatform();
+      setFlash("Logged in.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleTenantSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest("/api/tenants", {
+        method: "POST",
+        auth: true,
+        body: {
+          name: valueFrom(event.currentTarget, "name"),
+          slug: valueFrom(event.currentTarget, "slug"),
+          primaryColor: valueFrom(event.currentTarget, "primaryColor"),
+          secondaryColor: valueFrom(event.currentTarget, "secondaryColor"),
+          description: valueFrom(event.currentTarget, "description")
+        }
+      });
+
+      event.currentTarget.reset();
+      await refreshPlatform();
+      setFlash("NGO created.", false);
     } catch (error) {
       setFlash(error.message, true);
     }
@@ -106,10 +205,15 @@
     elements.applicationsList.innerHTML = presenter.renderApplications(state.applications);
   }
 
+  function renderPlatform() {
+    elements.authState.innerHTML = presenter.renderAuthState(session);
+    elements.tenantList.innerHTML = presenter.renderTenantCards(session?.tenants ?? []);
+  }
+
   async function apiRequest(path, options) {
     const response = await fetch(path, {
       method: options.method ?? "GET",
-      headers: buildHeaders(options.tenantId, options.body !== undefined),
+      headers: buildHeaders(options),
       body: options.body === undefined ? undefined : JSON.stringify(options.body)
     });
 
@@ -121,12 +225,18 @@
     return payload;
   }
 
-  function buildHeaders(tenantId, hasBody) {
-    const headers = {
-      "x-tenant-id": tenantId
-    };
+  function buildHeaders(options) {
+    const headers = {};
 
-    if (hasBody) {
+    if (options.tenantId) {
+      headers["x-tenant-id"] = options.tenantId;
+    }
+
+    if (options.auth && authToken) {
+      headers.authorization = `Bearer ${authToken}`;
+    }
+
+    if (options.body !== undefined) {
       headers["content-type"] = "application/json";
     }
 

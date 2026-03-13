@@ -11,6 +11,12 @@ const {
   TenantMismatchError,
   ValidationError
 } = require("./adoption-service");
+const { JsonFileStore } = require("./file-store");
+const {
+  AuthenticationError,
+  AuthorizationError,
+  PlatformService
+} = require("./platform-service");
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const FRONTEND_DIR = path.join(ROOT_DIR, "frontend");
@@ -27,13 +33,28 @@ const CONTENT_TYPES = {
 };
 
 function createApp(options = {}) {
-  const service = options.service ?? new AdoptionService();
+  const adoptionService =
+    options.service ??
+    new AdoptionService({
+      store: new JsonFileStore(options.dataFile ?? path.join(ROOT_DIR, "tmp", "petong-data.json"))
+    });
+  const platformService =
+    options.platformService ??
+    new PlatformService({
+      jwtSecret: options.jwtSecret ?? process.env.PETONG_JWT_SECRET ?? "development-secret",
+      store: new JsonFileStore(
+        options.platformDataFile ?? path.join(ROOT_DIR, "tmp", "petong-platform.json")
+      )
+    });
 
   const server = http.createServer((request, response) => {
-    handleRequest(request, response, service);
+    handleRequest(request, response, {
+      adoptionService,
+      platformService
+    });
   });
 
-  return { server, service };
+  return { server, adoptionService, platformService };
 }
 
 async function readJsonBody(request) {
@@ -74,6 +95,14 @@ function mapErrorToStatus(error) {
     return 403;
   }
 
+  if (error instanceof AuthenticationError) {
+    return 401;
+  }
+
+  if (error instanceof AuthorizationError) {
+    return 403;
+  }
+
   if (error instanceof NotFoundError) {
     return 404;
   }
@@ -81,20 +110,20 @@ function mapErrorToStatus(error) {
   return 500;
 }
 
-function handleRequest(request, response, service) {
-  routeRequest(request, response, service).catch((error) => {
+function handleRequest(request, response, services) {
+  routeRequest(request, response, services).catch((error) => {
     const statusCode = mapErrorToStatus(error);
     const message = statusCode === 500 ? "Internal server error" : error.message;
     writeError(response, statusCode, message);
   });
 }
 
-async function routeRequest(request, response, service) {
+async function routeRequest(request, response, services) {
   const url = new URL(request.url, "http://localhost");
   const method = request.method ?? "GET";
 
-  if (method === "GET" && STATIC_FILES[url.pathname]) {
-    writeStaticFile(response, STATIC_FILES[url.pathname]);
+  if (method === "GET" && (STATIC_FILES[url.pathname] || isAppShellRoute(url.pathname))) {
+    writeStaticFile(response, STATIC_FILES[url.pathname] ?? STATIC_FILES["/"]);
     return;
   }
 
@@ -108,6 +137,77 @@ async function routeRequest(request, response, service) {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/api/auth/register") {
+    const body = await readJsonBody(request);
+    writeJson(response, 201, services.platformService.registerUser(body));
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/auth/login") {
+    const body = await readJsonBody(request);
+    writeJson(response, 200, services.platformService.login(body));
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/auth/logout") {
+    writeJson(response, 200, { ok: true });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/tenant-resolution") {
+    writeJson(response, 200, {
+      tenant: services.platformService.resolveTenantBySlug(url.searchParams.get("slug"))
+    });
+    return;
+  }
+
+  const user = authenticateRequest(request, services.platformService);
+
+  if (method === "GET" && url.pathname === "/api/session") {
+    writeJson(response, 200, {
+      user,
+      tenants: services.platformService.listUserTenants(user.id)
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/tenants") {
+    const body = await readJsonBody(request);
+    writeJson(response, 201, {
+      tenant: services.platformService.createTenant({
+        creatorUserId: user.id,
+        name: body.name,
+        slug: body.slug,
+        logo: body.logo,
+        primaryColor: body.primaryColor,
+        secondaryColor: body.secondaryColor,
+        description: body.description
+      })
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/my-tenants") {
+    writeJson(response, 200, {
+      tenants: services.platformService.listUserTenants(user.id)
+    });
+    return;
+  }
+
+  const memberMatch = url.pathname.match(/^\/api\/tenants\/([^/]+)\/members$/);
+  if (method === "POST" && memberMatch) {
+    const body = await readJsonBody(request);
+    writeJson(response, 201, {
+      membership: services.platformService.addTenantMember({
+        actorUserId: user.id,
+        tenantId: memberMatch[1],
+        userId: body.userId,
+        role: body.role
+      })
+    });
+    return;
+  }
+
   const tenantId = request.headers["x-tenant-id"];
   if (!tenantId || typeof tenantId !== "string") {
     writeError(response, 400, "Header x-tenant-id is required");
@@ -115,13 +215,13 @@ async function routeRequest(request, response, service) {
   }
 
   if (method === "GET" && url.pathname === "/api/pets") {
-    writeJson(response, 200, { pets: service.listPetsByTenant(tenantId) });
+    writeJson(response, 200, { pets: services.adoptionService.listPetsByTenant(tenantId) });
     return;
   }
 
   if (method === "POST" && url.pathname === "/api/pets") {
     const body = await readJsonBody(request);
-    const pet = service.registerPet({
+    const pet = services.adoptionService.registerPet({
       tenantId,
       name: body.name,
       species: body.species,
@@ -132,13 +232,13 @@ async function routeRequest(request, response, service) {
   }
 
   if (method === "GET" && url.pathname === "/api/applications") {
-    writeJson(response, 200, { applications: service.listApplicationsByTenant(tenantId) });
+    writeJson(response, 200, { applications: services.adoptionService.listApplicationsByTenant(tenantId) });
     return;
   }
 
   if (method === "POST" && url.pathname === "/api/applications") {
     const body = await readJsonBody(request);
-    const application = service.submitApplication({
+    const application = services.adoptionService.submitApplication({
       tenantId,
       petId: body.petId,
       adopterName: body.adopterName
@@ -149,7 +249,7 @@ async function routeRequest(request, response, service) {
 
   const approveMatch = url.pathname.match(/^\/api\/applications\/([^/]+)\/approve$/);
   if (method === "POST" && approveMatch) {
-    const result = service.approveApplication({
+    const result = services.adoptionService.approveApplication({
       tenantId,
       applicationId: approveMatch[1]
     });
@@ -170,11 +270,14 @@ function writeStaticFile(response, filePath) {
 }
 
 function startServer(port = 3001) {
-  const { server, service } = createApp();
+  const { server, adoptionService, platformService } = createApp({
+    dataFile: process.env.PETONG_DATA_FILE,
+    platformDataFile: process.env.PETONG_PLATFORM_DATA_FILE
+  });
 
   return new Promise((resolve) => {
     server.listen(port, () => {
-      resolve({ server, service, port });
+      resolve({ server, adoptionService, platformService, port });
     });
   });
 }
@@ -207,8 +310,26 @@ async function injectRequest(service, options) {
       }
     };
 
-    handleRequest(request, response, service);
+    handleRequest(request, response, {
+      adoptionService: service,
+      platformService:
+        options.platformService ?? new PlatformService({ jwtSecret: options.jwtSecret ?? "inject-secret" })
+    });
   });
+}
+
+function authenticateRequest(request, platformService) {
+  const header = request.headers.authorization ?? "";
+  const match = header.match(/^Bearer (.+)$/);
+  if (!match) {
+    throw new AuthenticationError("Bearer token is required");
+  }
+
+  return platformService.authenticate(match[1]);
+}
+
+function isAppShellRoute(pathname) {
+  return pathname === "/login" || pathname === "/dashboard" || /^\/t\/[^/]+$/.test(pathname);
 }
 
 module.exports = {

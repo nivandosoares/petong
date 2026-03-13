@@ -67,8 +67,10 @@ function escapeHtml(value) {
 
 const presenter = {
   escapeHtml,
+  renderAuthState,
   renderApplications,
-  renderPets
+  renderPets,
+  renderTenantCards
 };
 
 if (typeof module !== "undefined") {
@@ -77,4 +79,51 @@ if (typeof module !== "undefined") {
 
 if (typeof window !== "undefined") {
   window.PetongPresenter = presenter;
+}
+
+function renderAuthState(session) {
+  if (!session) {
+    return `
+      <div class="empty">
+        <strong>Guest Mode</strong>
+        <p class="card-meta">Register or log in to create NGOs, manage memberships, and access the dashboard.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <article class="card">
+      <div class="card-top">
+        <div>
+          <h3>${escapeHtml(session.user.name)}</h3>
+          <p class="card-meta">${escapeHtml(session.user.email)}</p>
+        </div>
+        <span class="badge">${escapeHtml(session.user.platformRole)}</span>
+      </div>
+      <p class="card-meta">Authenticated for Sprint 1 platform operations.</p>
+    </article>
+  `;
+}
+
+function renderTenantCards(tenants) {
+  if (!tenants.length) {
+    return '<div class="empty">No NGOs linked to this account yet.</div>';
+  }
+
+  return tenants
+    .map(
+      (entry) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(entry.tenant.name)}</h3>
+              <p class="card-meta">/${escapeHtml(`t/${entry.tenant.slug}`)}</p>
+            </div>
+            <span class="badge">${escapeHtml(entry.membership.role)}</span>
+          </div>
+          <p class="card-meta">${escapeHtml(entry.tenant.description)}</p>
+        </article>
+      `
+    )
+    .join("");
 }

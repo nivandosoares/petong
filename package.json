@@ -1,6 +1,6 @@
 {
   "name": "petong",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "private": true,
   "scripts": {
     "start:backend": "node backend/index.js",

@@ -154,3 +154,39 @@ test both frontend rendering helpers and backend static asset delivery
 
 done criteria:
 repository contains a usable browser UI backed by the adoption API with automated backend and frontend tests
+
+---
+
+ISSUE-010
+Persist adoption data across backend restarts
+
+status: closed
+priority: high
+type: feature
+
+description:
+move the adoption workflow beyond in-memory-only storage
+persist pets, applications, and sequence counters to disk
+wire the backend runtime to load the persisted state on startup
+cover persistence behavior with automated tests
+
+done criteria:
+repository retains adoption data after the backend process restarts
+
+---
+
+ISSUE-011
+Implement Sprint 1 multi-tenant platform foundation
+
+status: closed
+priority: high
+type: feature
+
+description:
+add tenant entities, user authentication, tenant membership, and tenant resolution
+support registration, login, JWT authentication, and NGO creation
+serve basic homepage, login, dashboard, and tenant routes from the current frontend shell
+cover the core sprint 1 flows with automated backend and frontend tests
+
+done criteria:
+users can register, NGOs can be created, users can join an NGO, and tenant routes resolve in the running application

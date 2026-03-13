@@ -22,13 +22,16 @@ class ValidationError extends Error {
 }
 
 class AdoptionService {
-  constructor() {
+  constructor(options = {}) {
+    this.store = options.store ?? null;
     this.pets = new Map();
     this.applications = new Map();
     this.sequence = {
       pet: 0,
       application: 0
     };
+
+    this.#hydrate();
   }
 
   registerPet(input) {
@@ -45,6 +48,7 @@ class AdoptionService {
     };
 
     this.pets.set(pet.id, pet);
+    this.#persist();
     return { ...pet };
   }
 
@@ -80,6 +84,7 @@ class AdoptionService {
     };
 
     this.applications.set(application.id, application);
+    this.#persist();
     return { ...application };
   }
 
@@ -108,6 +113,7 @@ class AdoptionService {
 
     application.status = "approved";
     pet.status = "pending_adoption";
+    this.#persist();
 
     return {
       application: { ...application },
@@ -115,9 +121,46 @@ class AdoptionService {
     };
   }
 
+  exportState() {
+    return {
+      sequence: { ...this.sequence },
+      pets: Array.from(this.pets.values()).map((pet) => ({ ...pet })),
+      applications: Array.from(this.applications.values()).map((application) => ({ ...application }))
+    };
+  }
+
   #nextId(kind) {
     this.sequence[kind] += 1;
     return `${kind}_${this.sequence[kind]}`;
+  }
+
+  #hydrate() {
+    if (!this.store) {
+      return;
+    }
+
+    const state = this.store.load();
+    if (!state) {
+      return;
+    }
+
+    this.sequence = {
+      pet: Number(state.sequence?.pet ?? 0),
+      application: Number(state.sequence?.application ?? 0)
+    };
+
+    this.pets = new Map((state.pets ?? []).map((pet) => [pet.id, { ...pet }]));
+    this.applications = new Map(
+      (state.applications ?? []).map((application) => [application.id, { ...application }])
+    );
+  }
+
+  #persist() {
+    if (!this.store) {
+      return;
+    }
+
+    this.store.save(this.exportState());
   }
 }
 

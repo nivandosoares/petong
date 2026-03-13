@@ -5,8 +5,10 @@ const assert = require("node:assert/strict");
 
 const {
   escapeHtml,
+  renderAuthState,
   renderApplications,
-  renderPets
+  renderPets,
+  renderTenantCards
 } = require("../presenter");
 
 test("escapes HTML-special characters", () => {
@@ -51,4 +53,23 @@ test("renders approval buttons only for submitted applications", () => {
 
   assert.match(html, /data-approve-id="application_1"/);
   assert.doesNotMatch(html, /data-approve-id="application_2"/);
+});
+
+test("renders guest auth state and tenant cards", () => {
+  assert.match(renderAuthState(null), /Guest Mode/);
+  assert.match(
+    renderTenantCards([
+      {
+        tenant: {
+          name: "Happy Paws",
+          slug: "happy-paws",
+          description: "Rescue collective"
+        },
+        membership: {
+          role: "ngo_admin"
+        }
+      }
+    ]),
+    /Happy Paws/
+  );
 });

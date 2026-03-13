@@ -4,6 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const { AdoptionService } = require("../src/adoption-service");
+const { PlatformService } = require("../src/platform-service");
 const { injectRequest } = require("../src/server");
 
 test("reports health without a tenant header", async () => {
@@ -40,11 +41,13 @@ test("serves the browser presenter bundle", async () => {
 
 test("creates and lists tenant-scoped pets through the API", async () => {
   const service = new AdoptionService();
+  const auth = createAuthContext();
 
   const createResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/pets",
-    headers: jsonHeaders("ngo_red"),
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
     body: {
       name: "Luna",
       species: "dog",
@@ -58,7 +61,8 @@ test("creates and lists tenant-scoped pets through the API", async () => {
   await injectRequest(service, {
     method: "POST",
     url: "/api/pets",
-    headers: jsonHeaders("ngo_blue"),
+    headers: jsonHeaders("ngo_blue", auth.token),
+    platformService: auth.platformService,
     body: {
       name: "Milo",
       species: "cat"
@@ -68,7 +72,11 @@ test("creates and lists tenant-scoped pets through the API", async () => {
   const response = await injectRequest(service, {
     method: "GET",
     url: "/api/pets",
-    headers: { "x-tenant-id": "ngo_red" }
+    headers: {
+      authorization: `Bearer ${auth.token}`,
+      "x-tenant-id": "ngo_red"
+    },
+    platformService: auth.platformService
   });
 
   assert.equal(response.statusCode, 200);
@@ -77,10 +85,12 @@ test("creates and lists tenant-scoped pets through the API", async () => {
 
 test("rejects cross-tenant application submission through the API", async () => {
   const service = new AdoptionService();
+  const auth = createAuthContext();
   const petResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/pets",
-    headers: jsonHeaders("ngo_red"),
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
     body: {
       name: "Luna",
       species: "dog"
@@ -90,7 +100,8 @@ test("rejects cross-tenant application submission through the API", async () => 
   const response = await injectRequest(service, {
     method: "POST",
     url: "/api/applications",
-    headers: jsonHeaders("ngo_blue"),
+    headers: jsonHeaders("ngo_blue", auth.token),
+    platformService: auth.platformService,
     body: {
       petId: petResponse.body.pet.id,
       adopterName: "Sam"
@@ -103,10 +114,12 @@ test("rejects cross-tenant application submission through the API", async () => 
 
 test("approves an application and updates the pet through the API", async () => {
   const service = new AdoptionService();
+  const auth = createAuthContext();
   const petResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/pets",
-    headers: jsonHeaders("ngo_red"),
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
     body: {
       name: "Luna",
       species: "dog"
@@ -116,7 +129,8 @@ test("approves an application and updates the pet through the API", async () => 
   const applicationResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/applications",
-    headers: jsonHeaders("ngo_red"),
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
     body: {
       petId: petResponse.body.pet.id,
       adopterName: "Sam"
@@ -126,7 +140,11 @@ test("approves an application and updates the pet through the API", async () => 
   const approveResponse = await injectRequest(service, {
     method: "POST",
     url: `/api/applications/${applicationResponse.body.application.id}/approve`,
-    headers: { "x-tenant-id": "ngo_red" }
+    headers: {
+      authorization: `Bearer ${auth.token}`,
+      "x-tenant-id": "ngo_red"
+    },
+    platformService: auth.platformService
   });
 
   assert.equal(approveResponse.statusCode, 200);
@@ -135,18 +153,43 @@ test("approves an application and updates the pet through the API", async () => 
 });
 
 test("requires tenant headers for protected API routes", async () => {
+  const auth = createAuthContext();
   const response = await injectRequest(new AdoptionService(), {
     method: "GET",
-    url: "/api/pets"
+    url: "/api/pets",
+    headers: {
+      authorization: `Bearer ${auth.token}`
+    },
+    platformService: auth.platformService
   });
 
   assert.equal(response.statusCode, 400);
   assert.equal(response.body.error, "Header x-tenant-id is required");
 });
 
-function jsonHeaders(tenantId) {
+function jsonHeaders(tenantId, token) {
+  return token
+    ? {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        "x-tenant-id": tenantId
+      }
+    : {
+      "content-type": "application/json",
+      "x-tenant-id": tenantId
+    };
+}
+
+function createAuthContext() {
+  const platformService = new PlatformService({ jwtSecret: "test-secret" });
+  const registration = platformService.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  });
+
   return {
-    "content-type": "application/json",
-    "x-tenant-id": tenantId
+    platformService,
+    token: registration.token
   };
 }
