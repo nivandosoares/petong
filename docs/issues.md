@@ -119,3 +119,21 @@ verify the preview assets exist so the tunnel has real content to expose
 
 done criteria:
 repository contains a preview page and local preview server command for the tunnel workflow
+
+---
+
+ISSUE-008
+Expose the adoption domain through an HTTP API
+
+status: closed
+priority: high
+type: feature
+
+description:
+add a real backend API on top of the tenant-aware adoption service
+require tenant headers on protected routes
+support listing and creating pets plus application submission and approval
+cover the API with integration-style backend tests
+
+done criteria:
+repository contains a runnable HTTP API for the adoption workflow with automated tests

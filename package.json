@@ -1,8 +1,9 @@
 {
   "name": "petong",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "scripts": {
+    "start:backend": "node backend/index.js",
     "test:backend": "node --test backend/tests/*.test.js"
   }
 }
