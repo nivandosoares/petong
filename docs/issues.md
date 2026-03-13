@@ -284,7 +284,7 @@ the application workflow supports pending, under_review, approved, and rejected 
 ISSUE-017
 Implement Sprint 6 donation transparency
 
-status: open
+status: closed
 priority: high
 type: feature
 

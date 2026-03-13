@@ -6,6 +6,7 @@ const assert = require("node:assert/strict");
 const { AdoptionService } = require("../src/adoption-service");
 const { PlatformService } = require("../src/platform-service");
 const { injectRequest } = require("../src/server");
+const { TransparencyService } = require("../src/transparency-service");
 
 test("reports health without a tenant header", async () => {
   const response = await injectRequest(new AdoptionService(), {
@@ -25,7 +26,7 @@ test("serves the frontend shell at the root route", async () => {
 
   assert.equal(response.statusCode, 200);
   assert.match(response.headers["content-type"], /text\/html/);
-  assert.match(response.body, /Adoption Desk/);
+  assert.match(response.body, /Every adoption workflow deserves a warmer front door/);
 });
 
 test("serves the browser presenter bundle", async () => {
@@ -39,8 +40,20 @@ test("serves the browser presenter bundle", async () => {
   assert.match(response.body, /PetongPresenter/);
 });
 
+test("serves dashboard subsection routes from the frontend shell", async () => {
+  const response = await injectRequest(new AdoptionService(), {
+    method: "GET",
+    url: "/dashboard/transparency"
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.match(response.headers["content-type"], /text\/html/);
+  assert.match(response.body, /Operations Desk/);
+});
+
 test("returns public pets on the public tenant endpoint", async () => {
   const service = new AdoptionService();
+  const transparencyService = new TransparencyService();
   const auth = createAuthContext();
   const tenant = auth.platformService.createTenant({
     creatorUserId: auth.user.id,
@@ -57,16 +70,102 @@ test("returns public pets on the public tenant endpoint", async () => {
     species: "dog",
     city: "Sao Paulo"
   });
+  const campaign = transparencyService.createCampaign({
+    tenantId: tenant.id,
+    name: "Medical Fund",
+    goalAmount: 500
+  });
+  transparencyService.recordDonation({
+    tenantId: tenant.id,
+    campaignId: campaign.id,
+    amount: 150
+  });
 
   const response = await injectRequest(service, {
     method: "GET",
     url: "/api/public/tenants/happy-paws",
-    platformService: auth.platformService
+    platformService: auth.platformService,
+    transparencyService
   });
 
   assert.equal(response.statusCode, 200);
   assert.equal(response.body.pets.length, 1);
   assert.equal(response.body.pets[0].name, "Luna");
+  assert.equal(response.body.transparency.totals.totalRaised, 150);
+});
+
+test("creates and lists transparency records through the API", async () => {
+  const service = new AdoptionService();
+  const transparencyService = new TransparencyService();
+  const auth = createAuthContext();
+  const tenant = auth.platformService.createTenant({
+    creatorUserId: auth.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  const campaignResponse = await injectRequest(service, {
+    method: "POST",
+    url: "/api/transparency/campaigns",
+    headers: jsonHeaders(tenant.id, auth.token),
+    platformService: auth.platformService,
+    transparencyService,
+    body: {
+      name: "Food Drive",
+      goalAmount: 300
+    }
+  });
+
+  assert.equal(campaignResponse.statusCode, 201);
+
+  const donationResponse = await injectRequest(service, {
+    method: "POST",
+    url: "/api/transparency/donations",
+    headers: jsonHeaders(tenant.id, auth.token),
+    platformService: auth.platformService,
+    transparencyService,
+    body: {
+      campaignId: campaignResponse.body.campaign.id,
+      donorName: "Ana",
+      amount: 120
+    }
+  });
+
+  assert.equal(donationResponse.statusCode, 201);
+
+  const expenseResponse = await injectRequest(service, {
+    method: "POST",
+    url: "/api/transparency/expenses",
+    headers: jsonHeaders(tenant.id, auth.token),
+    platformService: auth.platformService,
+    transparencyService,
+    body: {
+      campaignId: campaignResponse.body.campaign.id,
+      category: "food",
+      description: "Dry food bags",
+      amount: 45
+    }
+  });
+
+  assert.equal(expenseResponse.statusCode, 201);
+
+  const summaryResponse = await injectRequest(service, {
+    method: "GET",
+    url: "/api/transparency/summary",
+    headers: {
+      authorization: `Bearer ${auth.token}`,
+      "x-tenant-id": tenant.id
+    },
+    platformService: auth.platformService,
+    transparencyService
+  });
+
+  assert.equal(summaryResponse.statusCode, 200);
+  assert.equal(summaryResponse.body.summary.totals.totalRaised, 120);
+  assert.equal(summaryResponse.body.summary.totals.totalSpent, 45);
 });
 
 test("creates and lists tenant-scoped pets through the API", async () => {

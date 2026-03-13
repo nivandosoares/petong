@@ -12,7 +12,10 @@ This document is the minimal operator and agent bootstrap guide for continuing t
 - Product progress:
   - Sprint 1 foundation implemented
   - Sprint 2 NGO management and public theming implemented
-  - adoption workflow and persistence already present
+  - Sprint 3 pet management implemented
+  - Sprint 4 adoption discovery implemented
+  - Sprint 5 adoption workflow implemented
+  - Sprint 6 donation transparency implemented
 - Remote preview:
   - Cloudflare quick tunnel workflow exists
   - local helper binary currently lives at `tools/cloudflared`
@@ -81,11 +84,13 @@ Default runtime data files:
 
 - `tmp/petong-data.json`
 - `tmp/petong-platform.json`
+- `tmp/petong-transparency.json`
 
 Override paths:
 
 - `PETONG_DATA_FILE`
 - `PETONG_PLATFORM_DATA_FILE`
+- `PETONG_TRANSPARENCY_DATA_FILE`
 - `PETONG_JWT_SECRET`
 
 ## Delivery standard
@@ -104,21 +109,16 @@ For database work, also read:
 - `docs/features/database-pipeline.md`
 - `docs/features/persistence.md`
 
-## Recommended continue path
+## Current feature notes
 
-The next planned product slice is Sprint 3 pet management:
-
-- richer pet fields
-- NGO pet editing and archiving
-- public pet listing on tenant pages
-- photo support planning
-
-Before starting that slice, review:
+For the completed product slices, review:
 
 - `docs/features/sprint-1-foundation.md`
 - `docs/features/ngo-theming.md`
-- `docs/features/adoption-domain.md`
-- `docs/features/http-api.md`
+- `docs/features/pet-management.md`
+- `docs/features/adoption-discovery.md`
+- `docs/features/adoption-workflow.md`
+- `docs/features/donation-transparency.md`
 
 ## Git and automation
 

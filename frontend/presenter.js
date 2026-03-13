@@ -122,10 +122,14 @@ const presenter = {
   renderAuthState,
   renderApplications,
   renderDiscoveryMatches,
+  renderDonationCards,
+  renderExpenseCards,
   renderMyApplications,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
+  renderTransparencySummary,
+  renderCampaignCards,
   renderTenantCards,
   renderTenantEditor
 };
@@ -204,15 +208,21 @@ function renderTenantEditor(entry) {
   `;
 }
 
-function renderPublicTenant(tenant) {
+function renderPublicTenant(tenant, transparency) {
   return `
     <section class="public-landing" style="--tenant-primary:${escapeHtml(tenant.primaryColor)};--tenant-secondary:${escapeHtml(tenant.secondaryColor)};">
       <div class="public-hero">
         <p class="eyebrow">NGO Landing Page</p>
         <h1>${escapeHtml(tenant.name)}</h1>
         <p class="lede">${escapeHtml(tenant.description)}</p>
+        <div class="card-actions">
+          <span class="badge">Tenant preview</span>
+          <span class="badge">${escapeHtml(tenant.primaryColor)}</span>
+          <span class="badge">${escapeHtml(tenant.secondaryColor)}</span>
+        </div>
         ${tenant.logo ? `<p class="card-meta">Logo URL: ${escapeHtml(tenant.logo)}</p>` : ""}
       </div>
+      ${renderTransparencySummary(transparency, { publicView: true })}
     </section>
   `;
 }
@@ -262,4 +272,117 @@ function renderDiscoveryMatches(matches) {
       `
     )
     .join("");
+}
+
+function renderTransparencySummary(summary, options = {}) {
+  if (!summary) {
+    return '<div class="empty">No transparency records available yet.</div>';
+  }
+
+  const title = options.publicView ? "Transparency Dashboard" : "Tenant Totals";
+
+  return `
+    <section class="transparency-block">
+      <div class="panel-header">
+        <h3>${title}</h3>
+        <p class="card-meta">Raised ${formatCurrency(summary.totals.totalRaised)} • Spent ${formatCurrency(summary.totals.totalSpent)} • Balance ${formatCurrency(summary.totals.balance)}</p>
+      </div>
+      <div class="metrics-grid">
+        <article class="metric-card">
+          <strong>${formatCurrency(summary.totals.totalRaised)}</strong>
+          <span class="card-meta">Total received</span>
+        </article>
+        <article class="metric-card">
+          <strong>${formatCurrency(summary.totals.totalSpent)}</strong>
+          <span class="card-meta">Recorded expenses</span>
+        </article>
+        <article class="metric-card">
+          <strong>${escapeHtml(String(summary.totals.campaignCount))}</strong>
+          <span class="card-meta">Active campaigns</span>
+        </article>
+      </div>
+      <div class="list">${renderCampaignCards(summary.campaigns)}</div>
+    </section>
+  `;
+}
+
+function renderCampaignCards(campaigns) {
+  if (!campaigns?.length) {
+    return '<div class="empty">No campaigns created for this tenant yet.</div>';
+  }
+
+  return campaigns
+    .map(
+      (campaign) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(campaign.name)}</h3>
+              <p class="card-meta">Campaign ID: ${escapeHtml(campaign.id)}</p>
+            </div>
+            <span class="badge">${escapeHtml(campaign.status)}</span>
+          </div>
+          <p class="card-meta">${escapeHtml(campaign.description || "No public description yet.")}</p>
+          <p class="card-meta">Raised ${formatCurrency(campaign.raisedAmount)} of ${formatCurrency(campaign.goalAmount)}</p>
+          <p class="card-meta">Spent ${formatCurrency(campaign.spentAmount)} • Balance ${formatCurrency(campaign.balance)}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderDonationCards(donations) {
+  if (!donations?.length) {
+    return '<div class="empty">No donations recorded for this tenant yet.</div>';
+  }
+
+  return donations
+    .map(
+      (donation) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(donation.donorName)}</h3>
+              <p class="card-meta">Donation ID: ${escapeHtml(donation.id)}</p>
+            </div>
+            <span class="badge">${formatCurrency(donation.amount)}</span>
+          </div>
+          <p class="card-meta">Campaign: ${escapeHtml(donation.campaignId || "general fund")}</p>
+          <p class="card-meta">${escapeHtml(donation.note || "No note provided.")}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderExpenseCards(expenses) {
+  if (!expenses?.length) {
+    return '<div class="empty">No expenses recorded for this tenant yet.</div>';
+  }
+
+  return expenses
+    .map(
+      (expense) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(expense.description)}</h3>
+              <p class="card-meta">Expense ID: ${escapeHtml(expense.id)}</p>
+            </div>
+            <span class="badge">${formatCurrency(expense.amount)}</span>
+          </div>
+          <p class="card-meta">Category: ${escapeHtml(expense.category)}</p>
+          <p class="card-meta">Campaign: ${escapeHtml(expense.campaignId || "general fund")}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2
+  }).format(Number(value ?? 0));
 }

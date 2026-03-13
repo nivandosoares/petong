@@ -7,289 +7,486 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <main class="shell">
-      <section id="public-tenant-view"></section>
-      <section class="hero">
-        <p class="eyebrow">Petong</p>
-        <h1>Adoption Desk</h1>
-        <p class="lede">
-          A tenant-aware rescue workspace for managing NGOs, memberships, pets, and adoption applications.
-        </p>
+    <nav class="topbar">
+      <div class="shell topbar-inner">
+        <a class="brand" href="/">
+          <span class="brand-mark">🐾</span>
+          <span class="brand-text">Petong</span>
+        </a>
+        <div class="topbar-links">
+          <a data-route-link="landing" href="/">Home</a>
+          <a data-route-link="dashboard-ngo" href="/dashboard/ngo">NGOs</a>
+          <a data-route-link="dashboard-pets" href="/dashboard/pets">Pets</a>
+          <a data-route-link="dashboard-adoptions" href="/dashboard/adoptions">Adoptions</a>
+          <a data-route-link="dashboard-transparency" href="/dashboard/transparency">Transparency</a>
+          <a class="button button-ghost" href="/login">Log in</a>
+          <a class="button" href="/dashboard">Open Desk</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero-band" data-view="landing">
+        <div class="shell hero-grid">
+          <div class="hero-copy">
+            <p class="pill">For animal rescue NGOs</p>
+            <h1>Every adoption workflow deserves a warmer front door.</h1>
+            <p class="lede">
+              Petong gives each rescue a branded landing page, a private operations desk, and a simpler path from intake to approval.
+            </p>
+            <div class="hero-actions">
+              <a class="button" href="/dashboard">Open Operations Desk</a>
+              <a class="button button-secondary" href="/dashboard/adoptions">Go To Adoptions</a>
+            </div>
+            <div class="hero-stats">
+              <article class="stat-card">
+                <strong>Multi-tenant</strong>
+                <span>Separate branding, members, and pet inventories for every NGO.</span>
+              </article>
+              <article class="stat-card">
+                <strong>Adoption-ready</strong>
+                <span>Discovery, applications, reviews, and public pet previews in one place.</span>
+              </article>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <article class="showcase-card showcase-main">
+              <p class="showcase-kicker">Rescue platform</p>
+              <h2>Paw-friendly operations, public trust, and faster matches.</h2>
+              <p>Use the same screen to register pets, manage tenants, and verify what adopters will actually see.</p>
+            </article>
+            <article class="showcase-card showcase-float">
+              <span class="badge badge-warm">Live preview</span>
+              <p>Public NGO branding stays visible while you work.</p>
+            </article>
+          </div>
+        </div>
       </section>
 
-      <section class="layout">
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Authentication</h2>
-            <p>Register, log in, and persist JWT access in the browser.</p>
+      <section id="features" class="feature-band" data-view="landing">
+        <div class="shell">
+          <div class="section-heading section-heading-centered">
+            <p class="eyebrow">Platform Highlights</p>
+            <h2>Everything your rescue desk needs</h2>
+            <p>Modeled after the reference landing page, but connected to the real tenant and adoption flows already in this repo.</p>
           </div>
-          <div id="auth-state" class="list"></div>
-          <form id="register-form" class="stack">
-            <label class="field">
-              <span>Name</span>
-              <input name="name" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Email</span>
-              <input name="email" type="email" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Password</span>
-              <input name="password" type="password" required>
-            </label>
-            <button class="button" type="submit">Register</button>
-          </form>
-          <form id="login-form" class="stack">
-            <label class="field">
-              <span>Email</span>
-              <input name="email" type="email" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Password</span>
-              <input name="password" type="password" required>
-            </label>
-            <button class="button button-secondary" type="submit">Login</button>
-          </form>
-        </article>
-
-        <article class="panel">
-          <div class="panel-header">
-            <h2>NGO Management</h2>
-            <p>Create NGOs, inspect your memberships, and prepare the public tenant route.</p>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <div class="feature-icon">🐶</div>
+              <h3>Pet Management</h3>
+              <p>Register rich pet profiles, archive outdated listings, and keep public inventory current.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">❤️</div>
+              <h3>Smart Matching</h3>
+              <p>Save adopter preferences and compare them against tenant-specific pets in discovery mode.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">🏠</div>
+              <h3>NGO Branding</h3>
+              <p>Create NGOs, update themes, and inspect the public-facing route without leaving the page.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">🛡️</div>
+              <h3>Application Review</h3>
+              <p>Keep approvals, rejections, and application history inside a tenant-aware workflow.</p>
+            </article>
           </div>
-          <form id="tenant-form" class="stack">
-            <label class="field">
-              <span>NGO Name</span>
-              <input name="name" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Slug</span>
-              <input name="slug" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Primary Color</span>
-              <input name="primaryColor" value="#0f766e" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Secondary Color</span>
-              <input name="secondaryColor" value="#f59e0b" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Description</span>
-              <input name="description" required autocomplete="off">
-            </label>
-            <button class="button" type="submit">Create NGO</button>
-          </form>
-          <form id="tenant-theme-form" class="stack">
-            <label class="field">
-              <span>Tenant ID</span>
-              <input name="tenantId" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Logo URL</span>
-              <input name="logo" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Primary Color</span>
-              <input name="primaryColor" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Secondary Color</span>
-              <input name="secondaryColor" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Description</span>
-              <input name="description" autocomplete="off">
-            </label>
-            <button class="button button-secondary" type="submit">Update Theme</button>
-          </form>
-          <form id="member-form" class="stack">
-            <label class="field">
-              <span>Tenant ID</span>
-              <input name="tenantId" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Member Email</span>
-              <input name="email" type="email" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Role</span>
-              <input name="role" value="ngo_staff" autocomplete="off">
-            </label>
-            <button class="button button-secondary" type="submit">Add Member</button>
-          </form>
-          <div id="tenant-editor" class="list"></div>
-          <div id="tenant-list" class="list"></div>
-        </article>
+        </div>
       </section>
 
-      <section class="toolbar panel">
-        <label class="field">
-          <span>Tenant ID</span>
-          <input id="tenant-id" name="tenantId" value="ngo_red" autocomplete="off">
-        </label>
-        <button id="refresh-button" class="button button-secondary" type="button">Refresh Board</button>
+      <section id="public-preview" class="preview-band" data-view="landing public">
+        <div class="shell">
+          <div class="section-heading">
+            <p class="eyebrow">Public Preview</p>
+            <h2>What a visitor sees on the tenant route</h2>
+            <p>The branding preview now sits in the landing flow instead of being buried deep in the admin layout.</p>
+          </div>
+          <div id="public-tenant-view"></div>
+          <div id="public-pets-list" class="list public-preview-list"></div>
+        </div>
       </section>
 
-      <section id="flash" class="flash" aria-live="polite"></section>
-
-      <section class="layout">
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Register Pet</h2>
-            <p>Add animals to the active tenant inventory.</p>
+      <section id="workspace" class="workspace-band" data-view="dashboard">
+        <div class="shell workspace-shell">
+          <div class="section-heading">
+            <p class="eyebrow">Operations Desk</p>
+            <h2>Run the rescue from one workspace</h2>
+            <p>The desk is split into route-sized sections so NGO, pet, adoption, and transparency work stay easier to navigate.</p>
           </div>
-          <form id="pet-form" class="stack">
-            <label class="field">
-              <span>Name</span>
-              <input name="name" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Species</span>
-              <input name="species" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Breed</span>
-              <input name="breed" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Size</span>
-              <input name="size" value="medium" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>City</span>
-              <input name="city" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Health Status</span>
-              <input name="healthStatus" value="unknown" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Special Needs</span>
-              <input name="specialNeeds" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Age Group</span>
-              <input name="ageGroup" placeholder="adult, puppy, senior" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Description</span>
-              <input name="description" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Photo URLs</span>
-              <input name="photoUrls" placeholder="comma-separated URLs" autocomplete="off">
-            </label>
-            <button class="button" type="submit">Add Pet</button>
-          </form>
-        </article>
 
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Submit Application</h2>
-            <p>Create a new adoption request for a listed pet.</p>
-          </div>
-          <form id="application-form" class="stack">
-            <label class="field">
-              <span>Pet ID</span>
-              <input name="petId" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Adopter Name</span>
-              <input name="adopterName" required autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Message</span>
-              <input name="message" autocomplete="off">
-            </label>
-            <button class="button" type="submit">Submit Application</button>
-          </form>
-        </article>
-      </section>
+          <nav class="workspace-nav">
+            <a data-route-link="dashboard" href="/dashboard">Overview</a>
+            <a data-route-link="dashboard-ngo" href="/dashboard/ngo">NGOs</a>
+            <a data-route-link="dashboard-pets" href="/dashboard/pets">Pets</a>
+            <a data-route-link="dashboard-adoptions" href="/dashboard/adoptions">Adoptions</a>
+            <a data-route-link="dashboard-transparency" href="/dashboard/transparency">Transparency</a>
+          </nav>
 
-      <section class="layout">
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Adoption Discovery</h2>
-            <p>Create an adoption profile and view compatibility-ranked pets.</p>
-          </div>
-          <form id="profile-form" class="stack">
-            <label class="field">
-              <span>Housing Type</span>
-              <input name="housingType" value="apartment" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Yard Availability</span>
-              <input name="yardAvailability" value="false" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>City</span>
-              <input name="city" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Has Children</span>
-              <input name="hasChildren" value="false" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Has Other Animals</span>
-              <input name="hasOtherAnimals" value="false" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Pet Experience</span>
-              <input name="petExperience" value="beginner" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Preferred Pet Size</span>
-              <input name="preferredPetSize" value="medium" autocomplete="off">
-            </label>
-            <label class="field">
-              <span>Can Handle Special Needs</span>
-              <input name="canHandleSpecialNeeds" value="false" autocomplete="off">
-            </label>
-            <button class="button" type="submit">Save Profile</button>
-          </form>
-          <label class="field">
-            <span>Discovery Tenant Slug</span>
-            <input id="discovery-tenant-slug" value="" autocomplete="off">
-          </label>
-          <button id="refresh-discovery-button" class="button button-secondary" type="button">Refresh Matches</button>
-          <div id="discovery-list" class="list"></div>
-        </article>
+          <section id="flash" class="flash" aria-live="polite"></section>
 
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Pets</h2>
-            <p>Inventory for the active tenant only.</p>
-          </div>
-          <div id="pets-list" class="list"></div>
-        </article>
+          <section class="workspace-grid workspace-grid-wide">
+            <article id="auth" class="panel" data-route-section="access">
+              <div class="panel-header">
+                <h3>Authentication</h3>
+                <p>Register, log in, and persist JWT access in the browser.</p>
+              </div>
+              <div id="auth-state" class="list"></div>
+              <div class="form-grid">
+                <form id="register-form" class="stack">
+                  <label class="field">
+                    <span>Name</span>
+                    <input name="name" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Password</span>
+                    <input name="password" type="password" required>
+                  </label>
+                  <button class="button" type="submit">Register</button>
+                </form>
+                <form id="login-form" class="stack">
+                  <label class="field">
+                    <span>Email</span>
+                    <input name="email" type="email" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Password</span>
+                    <input name="password" type="password" required>
+                  </label>
+                  <button class="button button-secondary" type="submit">Login</button>
+                </form>
+              </div>
+            </article>
 
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Applications</h2>
-            <p>Review requests without crossing tenant boundaries.</p>
-          </div>
-          <div id="applications-list" class="list"></div>
-        </article>
-      </section>
+            <article class="panel" data-route-section="access">
+              <div class="panel-header">
+                <h3>Active Tenant</h3>
+                <p>Set the current tenant context for pets and applications.</p>
+              </div>
+              <section class="toolbar">
+                <label class="field">
+                  <span>Tenant ID</span>
+                  <input id="tenant-id" name="tenantId" value="ngo_red" autocomplete="off">
+                </label>
+                <button id="refresh-button" class="button button-secondary" type="button">Refresh Board</button>
+              </section>
+            </article>
+          </section>
 
-      <section class="layout">
-        <article class="panel">
-          <div class="panel-header">
-            <h2>My Applications</h2>
-            <p>Track the status of your submitted adoption requests.</p>
-          </div>
-          <button id="refresh-my-applications-button" class="button button-secondary" type="button">Refresh My Applications</button>
-          <div id="my-applications-list" class="list"></div>
-        </article>
+          <section class="workspace-grid">
+            <article class="panel" data-route-section="ngo">
+              <div class="panel-header">
+                <h3>NGO Management</h3>
+                <p>Create NGOs, inspect memberships, and prepare the public route.</p>
+              </div>
+              <div class="stack">
+                <form id="tenant-form" class="stack">
+                  <label class="field">
+                    <span>NGO Name</span>
+                    <input name="name" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Slug</span>
+                    <input name="slug" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Primary Color</span>
+                    <input name="primaryColor" value="#ea7a30" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Secondary Color</span>
+                    <input name="secondaryColor" value="#f6ce55" required autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Description</span>
+                    <input name="description" required autocomplete="off">
+                  </label>
+                  <button class="button" type="submit">Create NGO</button>
+                </form>
+                <form id="tenant-theme-form" class="stack">
+                  <label class="field">
+                    <span>Tenant ID</span>
+                    <input name="tenantId" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Logo URL</span>
+                    <input name="logo" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Primary Color</span>
+                    <input name="primaryColor" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Secondary Color</span>
+                    <input name="secondaryColor" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Description</span>
+                    <input name="description" autocomplete="off">
+                  </label>
+                  <button class="button button-secondary" type="submit">Update Theme</button>
+                </form>
+                <form id="member-form" class="stack">
+                  <label class="field">
+                    <span>Tenant ID</span>
+                    <input name="tenantId" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Member Email</span>
+                    <input name="email" type="email" autocomplete="off">
+                  </label>
+                  <label class="field">
+                    <span>Role</span>
+                    <input name="role" value="ngo_staff" autocomplete="off">
+                  </label>
+                  <button class="button button-secondary" type="submit">Add Member</button>
+                </form>
+              </div>
+              <div id="tenant-editor" class="list"></div>
+              <div id="tenant-list" class="list"></div>
+            </article>
 
-        <article class="panel">
-          <div class="panel-header">
-            <h2>Public Pet Listing Preview</h2>
-            <p>What visitors see for the current tenant route.</p>
-          </div>
-          <div id="public-pets-list" class="list"></div>
-        </article>
+            <article class="panel" data-route-section="pets">
+              <div class="panel-header">
+                <h3>Register Pet</h3>
+                <p>Add animals to the active tenant inventory.</p>
+              </div>
+              <form id="pet-form" class="stack">
+                <label class="field">
+                  <span>Name</span>
+                  <input name="name" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Species</span>
+                  <input name="species" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Breed</span>
+                  <input name="breed" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Size</span>
+                  <input name="size" value="medium" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>City</span>
+                  <input name="city" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Health Status</span>
+                  <input name="healthStatus" value="unknown" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Special Needs</span>
+                  <input name="specialNeeds" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Age Group</span>
+                  <input name="ageGroup" placeholder="adult, puppy, senior" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Description</span>
+                  <input name="description" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Photo URLs</span>
+                  <input name="photoUrls" placeholder="comma-separated URLs" autocomplete="off">
+                </label>
+                <button class="button" type="submit">Add Pet</button>
+              </form>
+            </article>
+
+            <article class="panel" data-route-section="adoption">
+              <div class="panel-header">
+                <h3>Submit Application</h3>
+                <p>Create a new adoption request for a listed pet.</p>
+              </div>
+              <form id="application-form" class="stack">
+                <label class="field">
+                  <span>Pet ID</span>
+                  <input name="petId" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Adopter Name</span>
+                  <input name="adopterName" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Message</span>
+                  <input name="message" autocomplete="off">
+                </label>
+                <button class="button" type="submit">Submit Application</button>
+              </form>
+            </article>
+          </section>
+
+          <section class="workspace-grid">
+            <article class="panel" data-route-section="transparency">
+              <div class="panel-header">
+                <h3>Transparency Campaigns</h3>
+                <p>Create public fundraising goals for the active tenant.</p>
+              </div>
+              <form id="campaign-form" class="stack">
+                <label class="field">
+                  <span>Campaign Name</span>
+                  <input name="name" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Description</span>
+                  <input name="description" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Goal Amount</span>
+                  <input name="goalAmount" type="number" min="1" step="0.01" required autocomplete="off">
+                </label>
+                <button class="button" type="submit">Create Campaign</button>
+              </form>
+              <div id="campaign-list" class="list"></div>
+            </article>
+
+            <article class="panel" data-route-section="transparency">
+              <div class="panel-header">
+                <h3>Record Donation</h3>
+                <p>Add received contributions so the public page stays transparent.</p>
+              </div>
+              <form id="donation-form" class="stack">
+                <label class="field">
+                  <span>Campaign ID</span>
+                  <input name="campaignId" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Donor Name</span>
+                  <input name="donorName" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Amount</span>
+                  <input name="amount" type="number" min="1" step="0.01" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Note</span>
+                  <input name="note" autocomplete="off">
+                </label>
+                <button class="button button-secondary" type="submit">Record Donation</button>
+              </form>
+              <div id="donation-list" class="list"></div>
+            </article>
+
+            <article class="panel" data-route-section="transparency">
+              <div class="panel-header">
+                <h3>Record Expense</h3>
+                <p>Track spending against public goals and tenant operations.</p>
+              </div>
+              <form id="expense-form" class="stack">
+                <label class="field">
+                  <span>Campaign ID</span>
+                  <input name="campaignId" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Category</span>
+                  <input name="category" value="general_care" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Description</span>
+                  <input name="description" required autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Amount</span>
+                  <input name="amount" type="number" min="1" step="0.01" required autocomplete="off">
+                </label>
+                <button class="button button-secondary" type="submit">Record Expense</button>
+              </form>
+              <div id="expense-list" class="list"></div>
+            </article>
+          </section>
+
+          <section class="workspace-grid">
+            <article class="panel" data-route-section="transparency">
+              <div class="panel-header">
+                <h3>Transparency Summary</h3>
+                <p>Internal view of raised funds, spending, and campaign progress.</p>
+              </div>
+              <div id="transparency-summary" class="list"></div>
+            </article>
+
+            <article class="panel" data-route-section="adoption">
+              <div class="panel-header">
+                <h3>Adoption Discovery</h3>
+                <p>Create an adoption profile and view compatibility-ranked pets.</p>
+              </div>
+              <form id="profile-form" class="stack">
+                <label class="field">
+                  <span>Housing Type</span>
+                  <input name="housingType" value="apartment" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Yard Availability</span>
+                  <input name="yardAvailability" value="false" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>City</span>
+                  <input name="city" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Has Children</span>
+                  <input name="hasChildren" value="false" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Has Other Animals</span>
+                  <input name="hasOtherAnimals" value="false" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Pet Experience</span>
+                  <input name="petExperience" value="beginner" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Preferred Pet Size</span>
+                  <input name="preferredPetSize" value="medium" autocomplete="off">
+                </label>
+                <label class="field">
+                  <span>Can Handle Special Needs</span>
+                  <input name="canHandleSpecialNeeds" value="false" autocomplete="off">
+                </label>
+                <button class="button" type="submit">Save Profile</button>
+              </form>
+              <label class="field">
+                <span>Discovery Tenant Slug</span>
+                <input id="discovery-tenant-slug" value="" autocomplete="off">
+              </label>
+              <button id="refresh-discovery-button" class="button button-secondary" type="button">Refresh Matches</button>
+              <div id="discovery-list" class="list"></div>
+            </article>
+
+            <article class="panel" data-route-section="pets">
+              <div class="panel-header">
+                <h3>Pets</h3>
+                <p>Inventory for the active tenant only.</p>
+              </div>
+              <div id="pets-list" class="list"></div>
+            </article>
+
+            <article class="panel" data-route-section="adoption">
+              <div class="panel-header">
+                <h3>Applications</h3>
+                <p>Review requests without crossing tenant boundaries.</p>
+              </div>
+              <div id="applications-list" class="list"></div>
+            </article>
+          </section>
+
+          <section class="workspace-grid">
+            <article class="panel" data-route-section="adoption">
+              <div class="panel-header">
+                <h3>My Applications</h3>
+                <p>Track the status of your submitted adoption requests.</p>
+              </div>
+              <button id="refresh-my-applications-button" class="button button-secondary" type="button">Refresh My Applications</button>
+              <div id="my-applications-list" class="list"></div>
+            </article>
+          </section>
+        </div>
       </section>
     </main>
 

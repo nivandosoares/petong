@@ -8,10 +8,14 @@ const {
   renderAuthState,
   renderApplications,
   renderDiscoveryMatches,
+  renderDonationCards,
+  renderExpenseCards,
   renderMyApplications,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
+  renderTransparencySummary,
+  renderCampaignCards,
   renderTenantCards,
   renderTenantEditor
 } = require("../presenter");
@@ -116,14 +120,25 @@ test("renders tenant editor and public landing", () => {
   );
 
   assert.match(
-    renderPublicTenant({
-      name: "Happy Paws",
-      description: "Rescue collective",
-      primaryColor: "#111111",
-      secondaryColor: "#222222",
-      logo: ""
-    }),
-    /NGO Landing Page/
+    renderPublicTenant(
+      {
+        name: "Happy Paws",
+        description: "Rescue collective",
+        primaryColor: "#111111",
+        secondaryColor: "#222222",
+        logo: ""
+      },
+      {
+        totals: {
+          totalRaised: 1250,
+          totalSpent: 340,
+          balance: 910,
+          campaignCount: 1
+        },
+        campaigns: []
+      }
+    ),
+    /Transparency Dashboard/
   );
 
   assert.match(
@@ -150,5 +165,73 @@ test("renders tenant editor and public landing", () => {
       }
     ]),
     /Score 8/
+  );
+});
+
+test("renders transparency cards", () => {
+  assert.match(
+    renderTransparencySummary({
+      totals: {
+        totalRaised: 1000,
+        totalSpent: 400,
+        balance: 600,
+        campaignCount: 1
+      },
+      campaigns: [
+        {
+          id: "campaign_1",
+          name: "Medical Care",
+          status: "active",
+          description: "Emergency support",
+          raisedAmount: 1000,
+          goalAmount: 1500,
+          spentAmount: 400,
+          balance: 600
+        }
+      ]
+    }),
+    /Medical Care/
+  );
+
+  assert.match(
+    renderCampaignCards([
+      {
+        id: "campaign_1",
+        name: "Medical Care",
+        status: "active",
+        description: "Emergency support",
+        raisedAmount: 1000,
+        goalAmount: 1500,
+        spentAmount: 400,
+        balance: 600
+      }
+    ]),
+    /Campaign ID: campaign_1/
+  );
+
+  assert.match(
+    renderDonationCards([
+      {
+        id: "donation_1",
+        donorName: "Ana",
+        amount: 100,
+        campaignId: "campaign_1",
+        note: "Monthly support"
+      }
+    ]),
+    /Monthly support/
+  );
+
+  assert.match(
+    renderExpenseCards([
+      {
+        id: "expense_1",
+        description: "Vaccines",
+        amount: 40,
+        category: "medical",
+        campaignId: "campaign_1"
+      }
+    ]),
+    /Vaccines/
   );
 });

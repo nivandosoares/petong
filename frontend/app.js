@@ -4,6 +4,10 @@
   const presenter = window.PetongPresenter;
 
   const elements = {
+    views: Array.from(document.querySelectorAll("[data-view]")),
+    routeLinks: Array.from(document.querySelectorAll("[data-route-link]")),
+    routeSections: Array.from(document.querySelectorAll("[data-route-section]")),
+    workspaceGrids: Array.from(document.querySelectorAll(".workspace-grid")),
     publicTenantView: document.querySelector("#public-tenant-view"),
     authState: document.querySelector("#auth-state"),
     registerForm: document.querySelector("#register-form"),
@@ -15,6 +19,13 @@
     tenantList: document.querySelector("#tenant-list"),
     tenantId: document.querySelector("#tenant-id"),
     refreshButton: document.querySelector("#refresh-button"),
+    campaignForm: document.querySelector("#campaign-form"),
+    donationForm: document.querySelector("#donation-form"),
+    expenseForm: document.querySelector("#expense-form"),
+    campaignList: document.querySelector("#campaign-list"),
+    donationList: document.querySelector("#donation-list"),
+    expenseList: document.querySelector("#expense-list"),
+    transparencySummary: document.querySelector("#transparency-summary"),
     profileForm: document.querySelector("#profile-form"),
     discoveryTenantSlug: document.querySelector("#discovery-tenant-slug"),
     refreshDiscoveryButton: document.querySelector("#refresh-discovery-button"),
@@ -32,12 +43,17 @@
   let authToken = window.localStorage.getItem("petong_auth_token");
   let session = null;
 
+  applyPageLayout();
+
   elements.registerForm.addEventListener("submit", handleRegisterSubmit);
   elements.loginForm.addEventListener("submit", handleLoginSubmit);
   elements.tenantForm.addEventListener("submit", handleTenantSubmit);
   elements.tenantThemeForm.addEventListener("submit", handleTenantThemeSubmit);
   elements.memberForm.addEventListener("submit", handleMemberSubmit);
   elements.refreshButton.addEventListener("click", refreshBoard);
+  elements.campaignForm.addEventListener("submit", handleCampaignSubmit);
+  elements.donationForm.addEventListener("submit", handleDonationSubmit);
+  elements.expenseForm.addEventListener("submit", handleExpenseSubmit);
   elements.profileForm.addEventListener("submit", handleProfileSubmit);
   elements.refreshDiscoveryButton.addEventListener("click", refreshDiscovery);
   elements.refreshMyApplicationsButton.addEventListener("click", refreshMyApplications);
@@ -48,9 +64,11 @@
 
   refreshPlatform().then(async () => {
     await loadPublicTenantView();
-    await refreshBoard();
-    await refreshDiscovery();
-    await refreshMyApplications();
+    if (isWorkspaceRoute() && authToken) {
+      await refreshBoard();
+      await refreshDiscovery();
+      await refreshMyApplications();
+    }
   });
 
   async function refreshPlatform() {
@@ -75,17 +93,99 @@
   async function refreshBoard() {
     try {
       const tenantId = getTenantId();
-      const [petsResponse, applicationsResponse] = await Promise.all([
-        apiRequest("/api/pets", { tenantId }),
-        apiRequest("/api/applications", { tenantId })
+      const [petsResponse, applicationsResponse, transparencyResponse, campaignResponse, donationResponse, expenseResponse] = await Promise.all([
+        apiRequest("/api/pets", { tenantId, auth: true }),
+        apiRequest("/api/applications", { tenantId, auth: true }),
+        apiRequest("/api/transparency/summary", { tenantId, auth: true }),
+        apiRequest("/api/transparency/campaigns", { tenantId, auth: true }),
+        apiRequest("/api/transparency/donations", { tenantId, auth: true }),
+        apiRequest("/api/transparency/expenses", { tenantId, auth: true })
       ]);
 
       renderBoard({
         tenantId,
         pets: petsResponse.pets,
-        applications: applicationsResponse.applications
+        applications: applicationsResponse.applications,
+        transparency: transparencyResponse.summary,
+        campaigns: campaignResponse.campaigns,
+        donations: donationResponse.donations,
+        expenses: expenseResponse.expenses
       });
       setFlash(`Loaded tenant ${tenantId}.`, false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleCampaignSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest("/api/transparency/campaigns", {
+        method: "POST",
+        auth: true,
+        tenantId: getTenantId(),
+        body: {
+          name: valueFrom(event.currentTarget, "name"),
+          description: valueFrom(event.currentTarget, "description"),
+          goalAmount: valueFrom(event.currentTarget, "goalAmount")
+        }
+      });
+
+      event.currentTarget.reset();
+      await refreshBoard();
+      await loadPublicTenantView();
+      setFlash("Campaign created.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleDonationSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest("/api/transparency/donations", {
+        method: "POST",
+        auth: true,
+        tenantId: getTenantId(),
+        body: {
+          campaignId: valueFrom(event.currentTarget, "campaignId"),
+          donorName: valueFrom(event.currentTarget, "donorName"),
+          amount: valueFrom(event.currentTarget, "amount"),
+          note: valueFrom(event.currentTarget, "note")
+        }
+      });
+
+      event.currentTarget.reset();
+      await refreshBoard();
+      await loadPublicTenantView();
+      setFlash("Donation recorded.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleExpenseSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest("/api/transparency/expenses", {
+        method: "POST",
+        auth: true,
+        tenantId: getTenantId(),
+        body: {
+          campaignId: valueFrom(event.currentTarget, "campaignId"),
+          category: valueFrom(event.currentTarget, "category"),
+          description: valueFrom(event.currentTarget, "description"),
+          amount: valueFrom(event.currentTarget, "amount")
+        }
+      });
+
+      event.currentTarget.reset();
+      await refreshBoard();
+      await loadPublicTenantView();
+      setFlash("Expense recorded.", false);
     } catch (error) {
       setFlash(error.message, true);
     }
@@ -209,6 +309,7 @@
     try {
       await apiRequest("/api/pets", {
         method: "POST",
+        auth: true,
         tenantId: getTenantId(),
         body: {
           name: valueFrom(event.currentTarget, "name"),
@@ -270,6 +371,7 @@
     try {
       await apiRequest("/api/applications", {
         method: "POST",
+        auth: true,
         tenantId: getTenantId(),
         body: {
           petId: valueFrom(event.currentTarget, "petId"),
@@ -296,6 +398,7 @@
     try {
       await apiRequest(`/api/applications/${button.dataset.reviewId}/review`, {
         method: "POST",
+        auth: true,
         tenantId: getTenantId(),
         body: {
           status: button.dataset.reviewStatus,
@@ -320,6 +423,7 @@
     try {
       await apiRequest(`/api/pets/${button.dataset.archiveId}/archive`, {
         method: "POST",
+        auth: true,
         tenantId: getTenantId()
       });
 
@@ -334,6 +438,10 @@
   function renderBoard(state) {
     elements.petsList.innerHTML = presenter.renderPets(state.pets);
     elements.applicationsList.innerHTML = presenter.renderApplications(state.applications);
+    elements.transparencySummary.innerHTML = presenter.renderTransparencySummary(state.transparency);
+    elements.campaignList.innerHTML = presenter.renderCampaignCards(state.campaigns);
+    elements.donationList.innerHTML = presenter.renderDonationCards(state.donations);
+    elements.expenseList.innerHTML = presenter.renderExpenseCards(state.expenses);
   }
 
   function renderPlatform() {
@@ -351,7 +459,7 @@
 
     try {
       const response = await apiRequest(`/api/public/tenants/${slug}`, {});
-      elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant);
+      elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant, response.transparency);
       elements.publicPetsList.innerHTML = presenter.renderPublicPetCards(response.pets ?? []);
       if (!elements.discoveryTenantSlug.value.trim()) {
         elements.discoveryTenantSlug.value = slug;
@@ -445,6 +553,81 @@
   function publicTenantSlug() {
     const match = window.location.pathname.match(/^\/(?:ngo|t)\/([^/]+)$/);
     return match ? match[1] : "";
+  }
+
+  function isWorkspaceRoute() {
+    return currentRouteConfig().view === "dashboard";
+  }
+
+  function currentRouteConfig() {
+    const pathname = window.location.pathname;
+
+    if (pathname === "/") {
+      return { view: "landing", key: "landing", sections: [] };
+    }
+
+    if (pathname === "/login") {
+      return { view: "dashboard", key: "login", sections: ["access"] };
+    }
+
+    if (pathname === "/dashboard" || pathname === "/dashboard/ngo") {
+      return {
+        view: "dashboard",
+        key: pathname === "/dashboard" ? "dashboard" : "dashboard-ngo",
+        sections: ["access", "ngo"]
+      };
+    }
+
+    if (pathname === "/dashboard/pets") {
+      return { view: "dashboard", key: "dashboard-pets", sections: ["access", "pets"] };
+    }
+
+    if (pathname === "/dashboard/adoptions") {
+      return {
+        view: "dashboard",
+        key: "dashboard-adoptions",
+        sections: ["access", "adoption"]
+      };
+    }
+
+    if (pathname === "/dashboard/transparency") {
+      return {
+        view: "dashboard",
+        key: "dashboard-transparency",
+        sections: ["access", "transparency"]
+      };
+    }
+
+    if (/^\/(?:ngo|t)\/[^/]+$/.test(pathname)) {
+      return { view: "public", key: "public", sections: [] };
+    }
+
+    return { view: "landing", key: "landing", sections: [] };
+  }
+
+  function applyPageLayout() {
+    const route = currentRouteConfig();
+
+    for (const view of elements.views) {
+      const allowed = String(view.dataset.view ?? "")
+        .split(/\s+/)
+        .filter(Boolean);
+      view.hidden = !allowed.includes(route.view);
+    }
+
+    for (const panel of elements.routeSections) {
+      panel.hidden = route.view !== "dashboard" || !route.sections.includes(panel.dataset.routeSection);
+    }
+
+    for (const grid of elements.workspaceGrids) {
+      grid.hidden = !Array.from(grid.querySelectorAll("[data-route-section]")).some(
+        (panel) => !panel.hidden
+      );
+    }
+
+    for (const link of elements.routeLinks) {
+      link.classList.toggle("is-active", link.dataset.routeLink === route.key);
+    }
   }
 
   function parseBoolean(value) {

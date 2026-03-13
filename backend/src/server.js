@@ -17,6 +17,7 @@ const {
   AuthorizationError,
   PlatformService
 } = require("./platform-service");
+const { TransparencyService } = require("./transparency-service");
 
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const FRONTEND_DIR = path.join(ROOT_DIR, "frontend");
@@ -46,15 +47,23 @@ function createApp(options = {}) {
         options.platformDataFile ?? path.join(ROOT_DIR, "tmp", "petong-platform.json")
       )
     });
+  const transparencyService =
+    options.transparencyService ??
+    new TransparencyService({
+      store: new JsonFileStore(
+        options.transparencyDataFile ?? path.join(ROOT_DIR, "tmp", "petong-transparency.json")
+      )
+    });
 
   const server = http.createServer((request, response) => {
     handleRequest(request, response, {
       adoptionService,
-      platformService
+      platformService,
+      transparencyService
     });
   });
 
-  return { server, adoptionService, platformService };
+  return { server, adoptionService, platformService, transparencyService };
 }
 
 async function readJsonBody(request) {
@@ -166,7 +175,8 @@ async function routeRequest(request, response, services) {
     const tenant = services.platformService.resolveTenantBySlug(publicTenantMatch[1]);
     writeJson(response, 200, {
       tenant,
-      pets: services.adoptionService.listPublicPetsByTenant(tenant.id)
+      pets: services.adoptionService.listPublicPetsByTenant(tenant.id),
+      transparency: services.transparencyService.getTransparencySummary(tenant.id)
     });
     return;
   }
@@ -294,6 +304,8 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  const tenantMembership = services.platformService.getMembershipForUser(tenantId, user.id);
+
   if (method === "GET" && url.pathname === "/api/pets") {
     writeJson(response, 200, { pets: services.adoptionService.listPetsByTenant(tenantId) });
     return;
@@ -362,6 +374,106 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  if (method === "GET" && url.pathname === "/api/transparency/summary") {
+    if (!tenantMembership) {
+      throw new AuthorizationError("Tenant membership is required");
+    }
+
+    writeJson(response, 200, {
+      summary: services.transparencyService.getTransparencySummary(tenantId)
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/transparency/campaigns") {
+    if (!tenantMembership) {
+      throw new AuthorizationError("Tenant membership is required");
+    }
+
+    writeJson(response, 200, {
+      campaigns: services.transparencyService.listCampaignsByTenant(tenantId)
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/transparency/donations") {
+    if (!tenantMembership) {
+      throw new AuthorizationError("Tenant membership is required");
+    }
+
+    writeJson(response, 200, {
+      donations: services.transparencyService.listDonationsByTenant(tenantId)
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/api/transparency/expenses") {
+    if (!tenantMembership) {
+      throw new AuthorizationError("Tenant membership is required");
+    }
+
+    writeJson(response, 200, {
+      expenses: services.transparencyService.listExpensesByTenant(tenantId)
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/transparency/campaigns") {
+    if (!tenantMembership || !["ngo_admin", "ngo_staff"].includes(tenantMembership.role)) {
+      throw new AuthorizationError("Only NGO staff can manage transparency records");
+    }
+
+    const body = await readJsonBody(request);
+    writeJson(response, 201, {
+      campaign: services.transparencyService.createCampaign({
+        tenantId,
+        name: body.name,
+        description: body.description,
+        goalAmount: body.goalAmount,
+        status: body.status
+      })
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/transparency/donations") {
+    if (!tenantMembership || !["ngo_admin", "ngo_staff"].includes(tenantMembership.role)) {
+      throw new AuthorizationError("Only NGO staff can manage transparency records");
+    }
+
+    const body = await readJsonBody(request);
+    writeJson(response, 201, {
+      donation: services.transparencyService.recordDonation({
+        tenantId,
+        campaignId: body.campaignId,
+        donorName: body.donorName,
+        amount: body.amount,
+        note: body.note,
+        receivedAt: body.receivedAt
+      })
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/api/transparency/expenses") {
+    if (!tenantMembership || !["ngo_admin", "ngo_staff"].includes(tenantMembership.role)) {
+      throw new AuthorizationError("Only NGO staff can manage transparency records");
+    }
+
+    const body = await readJsonBody(request);
+    writeJson(response, 201, {
+      expense: services.transparencyService.recordExpense({
+        tenantId,
+        campaignId: body.campaignId,
+        category: body.category,
+        description: body.description,
+        amount: body.amount,
+        spentAt: body.spentAt
+      })
+    });
+    return;
+  }
+
   if (method === "POST" && url.pathname === "/api/applications") {
     const body = await readJsonBody(request);
     const application = services.adoptionService.submitApplication({
@@ -377,8 +489,7 @@ async function routeRequest(request, response, services) {
 
   const reviewMatch = url.pathname.match(/^\/api\/applications\/([^/]+)\/review$/);
   if (method === "POST" && reviewMatch) {
-    const membership = services.platformService.getMembershipForUser(tenantId, user.id);
-    if (!membership || !["ngo_admin", "ngo_staff"].includes(membership.role)) {
+    if (!tenantMembership || !["ngo_admin", "ngo_staff"].includes(tenantMembership.role)) {
       throw new AuthorizationError("Only NGO staff can review applications");
     }
 
@@ -409,7 +520,8 @@ function writeStaticFile(response, filePath) {
 function startServer(port = 3001) {
   const { server, adoptionService, platformService } = createApp({
     dataFile: process.env.PETONG_DATA_FILE,
-    platformDataFile: process.env.PETONG_PLATFORM_DATA_FILE
+    platformDataFile: process.env.PETONG_PLATFORM_DATA_FILE,
+    transparencyDataFile: process.env.PETONG_TRANSPARENCY_DATA_FILE
   });
 
   return new Promise((resolve) => {
@@ -449,6 +561,7 @@ async function injectRequest(service, options) {
 
     handleRequest(request, response, {
       adoptionService: service,
+      transparencyService: options.transparencyService ?? new TransparencyService(),
       platformService:
         options.platformService ?? new PlatformService({ jwtSecret: options.jwtSecret ?? "inject-secret" })
     });
@@ -469,6 +582,7 @@ function isAppShellRoute(pathname) {
   return (
     pathname === "/login" ||
     pathname === "/dashboard" ||
+    /^\/dashboard\/[^/]+$/.test(pathname) ||
     /^\/t\/[^/]+$/.test(pathname) ||
     /^\/ngo\/[^/]+$/.test(pathname)
   );

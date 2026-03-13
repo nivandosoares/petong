@@ -22,3 +22,6 @@ All notable autonomous-agent changes should be recorded here.
 - Added Sprint 4 adoption discovery with profile-driven compatibility matching and discovery UI.
 - Added Sprint 5 adoption workflow states, reviewer notes, applicant history, and frontend review tracking.
 - Added a dependency-free backend hot reload command for local development.
+- Redesigned the dependency-free frontend to follow the `Lovable App.mhtml` landing-page reference while preserving the existing tenant, pet, and adoption workflows.
+- Added Sprint 6 donation transparency with tenant-scoped campaigns, donations, expenses, public totals, and dashboard management UI.
+- Split the frontend into route-based dashboard sections so NGO, pet, adoption, and transparency work no longer live on one oversized page.
