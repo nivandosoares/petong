@@ -210,7 +210,7 @@ class AdoptionService {
   }
 
   submitApplication(input) {
-    assertRequired(input, ["tenantId", "petId", "adopterName"]);
+    assertRequired(input, ["tenantId", "petId", "adopterName", "applicantUserId"]);
 
     const pet = this.pets.get(input.petId);
     if (!pet) {
@@ -229,8 +229,19 @@ class AdoptionService {
       id: this.#nextId("application"),
       tenantId: input.tenantId,
       petId: input.petId,
+      applicantUserId: input.applicantUserId,
       adopterName: input.adopterName,
-      status: "submitted",
+      message: input.message ?? "",
+      status: "pending",
+      internalNotes: [],
+      statusHistory: [
+        {
+          status: "pending",
+          note: "Application submitted",
+          reviewerUserId: null,
+          createdAt: new Date().toISOString()
+        }
+      ],
       createdAt: new Date().toISOString()
     };
 
@@ -245,8 +256,14 @@ class AdoptionService {
       .map((application) => ({ ...application }));
   }
 
-  approveApplication(input) {
-    assertRequired(input, ["tenantId", "applicationId"]);
+  listApplicationsByApplicant(userId) {
+    return Array.from(this.applications.values())
+      .filter((application) => application.applicantUserId === userId)
+      .map((application) => ({ ...application }));
+  }
+
+  reviewApplication(input) {
+    assertRequired(input, ["tenantId", "applicationId", "status", "reviewerUserId"]);
 
     const application = this.applications.get(input.applicationId);
     if (!application) {
@@ -262,8 +279,35 @@ class AdoptionService {
       throw new NotFoundError(`Pet ${application.petId} was not found`);
     }
 
-    application.status = "approved";
-    pet.status = "pending_adoption";
+    if (!["under_review", "approved", "rejected"].includes(input.status)) {
+      throw new ValidationError(`Unsupported application status ${input.status}`);
+    }
+
+    application.status = input.status;
+    if (input.internalNote) {
+      application.internalNotes.push({
+        note: input.internalNote,
+        reviewerUserId: input.reviewerUserId,
+        createdAt: new Date().toISOString()
+      });
+    }
+    application.statusHistory.push({
+      status: input.status,
+      note: input.internalNote ?? "",
+      reviewerUserId: input.reviewerUserId,
+      createdAt: new Date().toISOString()
+    });
+
+    if (input.status === "approved") {
+      pet.status = "pending_adoption";
+      pet.adoptionStatus = "pending_adoption";
+    }
+
+    if (input.status === "rejected" && pet.status === "pending_adoption") {
+      pet.status = "available";
+      pet.adoptionStatus = "available";
+    }
+
     this.#persist();
 
     return {

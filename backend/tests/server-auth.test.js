@@ -203,6 +203,81 @@ test("creates an adoption profile and returns discovery matches", async () => {
   assert.equal(discovery.body.matches[0].name, "Luna");
 });
 
+test("supports adopter submission, staff review, and applicant history", async () => {
+  const platformService = new PlatformService({ jwtSecret: "test-secret" });
+  const adoptionService = new AdoptionService();
+  const admin = platformService.registerUser({
+    name: "Admin",
+    email: "admin@example.com",
+    password: "password123"
+  });
+  const adopter = platformService.registerUser({
+    name: "Taylor",
+    email: "taylor@example.com",
+    password: "password123"
+  });
+  const tenant = platformService.createTenant({
+    creatorUserId: admin.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  adoptionService.registerPet({
+    tenantId: tenant.id,
+    name: "Luna",
+    species: "dog"
+  });
+
+  const created = await injectRequest(adoptionService, {
+    method: "POST",
+    url: "/api/applications",
+    headers: {
+      ...authHeaders(adopter.token),
+      "x-tenant-id": tenant.id
+    },
+    platformService,
+    body: {
+      petId: "pet_1",
+      adopterName: "Taylor",
+      message: "I have a quiet home."
+    }
+  });
+
+  assert.equal(created.statusCode, 201);
+  assert.equal(created.body.application.status, "pending");
+
+  const reviewed = await injectRequest(adoptionService, {
+    method: "POST",
+    url: `/api/applications/${created.body.application.id}/review`,
+    headers: {
+      ...authHeaders(admin.token),
+      "x-tenant-id": tenant.id
+    },
+    platformService,
+    body: {
+      status: "under_review",
+      internalNote: "Interview booked"
+    }
+  });
+
+  assert.equal(reviewed.statusCode, 200);
+  assert.equal(reviewed.body.application.status, "under_review");
+
+  const mine = await injectRequest(adoptionService, {
+    method: "GET",
+    url: "/api/my-applications",
+    headers: authHeaders(adopter.token),
+    platformService
+  });
+
+  assert.equal(mine.statusCode, 200);
+  assert.equal(mine.body.applications.length, 1);
+  assert.equal(mine.body.applications[0].status, "under_review");
+});
+
 async function injectWithPlatform(
   options,
   platformService = new PlatformService({ jwtSecret: "test-secret" })

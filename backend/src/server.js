@@ -242,6 +242,13 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  if (method === "GET" && url.pathname === "/api/my-applications") {
+    writeJson(response, 200, {
+      applications: services.adoptionService.listApplicationsByApplicant(user.id)
+    });
+    return;
+  }
+
   const tenantMatch = url.pathname.match(/^\/api\/tenants\/([^/]+)$/);
   if (method === "GET" && tenantMatch) {
     writeJson(response, 200, {
@@ -360,17 +367,28 @@ async function routeRequest(request, response, services) {
     const application = services.adoptionService.submitApplication({
       tenantId,
       petId: body.petId,
-      adopterName: body.adopterName
+      applicantUserId: user.id,
+      adopterName: body.adopterName,
+      message: body.message
     });
     writeJson(response, 201, { application });
     return;
   }
 
-  const approveMatch = url.pathname.match(/^\/api\/applications\/([^/]+)\/approve$/);
-  if (method === "POST" && approveMatch) {
-    const result = services.adoptionService.approveApplication({
+  const reviewMatch = url.pathname.match(/^\/api\/applications\/([^/]+)\/review$/);
+  if (method === "POST" && reviewMatch) {
+    const membership = services.platformService.getMembershipForUser(tenantId, user.id);
+    if (!membership || !["ngo_admin", "ngo_staff"].includes(membership.role)) {
+      throw new AuthorizationError("Only NGO staff can review applications");
+    }
+
+    const body = await readJsonBody(request);
+    const result = services.adoptionService.reviewApplication({
       tenantId,
-      applicationId: approveMatch[1]
+      applicationId: reviewMatch[1],
+      reviewerUserId: user.id,
+      status: body.status,
+      internalNote: body.internalNote
     });
     writeJson(response, 200, result);
     return;

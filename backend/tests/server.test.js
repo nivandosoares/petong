@@ -142,13 +142,21 @@ test("rejects cross-tenant application submission through the API", async () => 
   assert.match(response.body.error, /provided tenant/);
 });
 
-test("approves an application and updates the pet through the API", async () => {
+test("reviews an application and updates the pet through the API", async () => {
   const service = new AdoptionService();
   const auth = createAuthContext();
+  const tenant = auth.platformService.createTenant({
+    creatorUserId: auth.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
   const petResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/pets",
-    headers: jsonHeaders("ngo_red", auth.token),
+    headers: jsonHeaders(tenant.id, auth.token),
     platformService: auth.platformService,
     body: {
       name: "Luna",
@@ -159,7 +167,7 @@ test("approves an application and updates the pet through the API", async () => 
   const applicationResponse = await injectRequest(service, {
     method: "POST",
     url: "/api/applications",
-    headers: jsonHeaders("ngo_red", auth.token),
+    headers: jsonHeaders(tenant.id, auth.token),
     platformService: auth.platformService,
     body: {
       petId: petResponse.body.pet.id,
@@ -169,12 +177,13 @@ test("approves an application and updates the pet through the API", async () => 
 
   const approveResponse = await injectRequest(service, {
     method: "POST",
-    url: `/api/applications/${applicationResponse.body.application.id}/approve`,
-    headers: {
-      authorization: `Bearer ${auth.token}`,
-      "x-tenant-id": "ngo_red"
-    },
-    platformService: auth.platformService
+    url: `/api/applications/${applicationResponse.body.application.id}/review`,
+    headers: jsonHeaders(tenant.id, auth.token),
+    platformService: auth.platformService,
+    body: {
+      status: "approved",
+      internalNote: "Approved after review"
+    }
   });
 
   assert.equal(approveResponse.statusCode, 200);

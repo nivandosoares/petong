@@ -22,6 +22,8 @@
     applicationForm: document.querySelector("#application-form"),
     petsList: document.querySelector("#pets-list"),
     discoveryList: document.querySelector("#discovery-list"),
+    refreshMyApplicationsButton: document.querySelector("#refresh-my-applications-button"),
+    myApplicationsList: document.querySelector("#my-applications-list"),
     publicPetsList: document.querySelector("#public-pets-list"),
     applicationsList: document.querySelector("#applications-list"),
     flash: document.querySelector("#flash")
@@ -38,6 +40,7 @@
   elements.refreshButton.addEventListener("click", refreshBoard);
   elements.profileForm.addEventListener("submit", handleProfileSubmit);
   elements.refreshDiscoveryButton.addEventListener("click", refreshDiscovery);
+  elements.refreshMyApplicationsButton.addEventListener("click", refreshMyApplications);
   elements.petForm.addEventListener("submit", handlePetSubmit);
   elements.applicationForm.addEventListener("submit", handleApplicationSubmit);
   elements.applicationsList.addEventListener("click", handleApplicationAction);
@@ -47,6 +50,7 @@
     await loadPublicTenantView();
     await refreshBoard();
     await refreshDiscovery();
+    await refreshMyApplications();
   });
 
   async function refreshPlatform() {
@@ -269,12 +273,14 @@
         tenantId: getTenantId(),
         body: {
           petId: valueFrom(event.currentTarget, "petId"),
-          adopterName: valueFrom(event.currentTarget, "adopterName")
+          adopterName: valueFrom(event.currentTarget, "adopterName"),
+          message: valueFrom(event.currentTarget, "message")
         }
       });
 
       event.currentTarget.reset();
       await refreshBoard();
+      await refreshMyApplications();
       setFlash("Application submitted.", false);
     } catch (error) {
       setFlash(error.message, true);
@@ -282,19 +288,24 @@
   }
 
   async function handleApplicationAction(event) {
-    const button = event.target.closest("[data-approve-id]");
+    const button = event.target.closest("[data-review-id]");
     if (!button) {
       return;
     }
 
     try {
-      await apiRequest(`/api/applications/${button.dataset.approveId}/approve`, {
+      await apiRequest(`/api/applications/${button.dataset.reviewId}/review`, {
         method: "POST",
-        tenantId: getTenantId()
+        tenantId: getTenantId(),
+        body: {
+          status: button.dataset.reviewStatus,
+          internalNote: `Updated from dashboard to ${button.dataset.reviewStatus}`
+        }
       });
 
       await refreshBoard();
-      setFlash("Application approved.", false);
+      await refreshMyApplications();
+      setFlash(`Application moved to ${button.dataset.reviewStatus}.`, false);
     } catch (error) {
       setFlash(error.message, true);
     }
@@ -371,6 +382,25 @@
       elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches(response.matches ?? []);
     } catch (error) {
       elements.discoveryList.innerHTML = presenter.renderDiscoveryMatches([]);
+      setFlash(error.message, true);
+    }
+  }
+
+  async function refreshMyApplications() {
+    if (!authToken) {
+      elements.myApplicationsList.innerHTML = presenter.renderMyApplications([]);
+      return;
+    }
+
+    try {
+      const response = await apiRequest("/api/my-applications", {
+        auth: true
+      });
+      elements.myApplicationsList.innerHTML = presenter.renderMyApplications(
+        response.applications ?? []
+      );
+    } catch (error) {
+      elements.myApplicationsList.innerHTML = presenter.renderMyApplications([]);
       setFlash(error.message, true);
     }
   }

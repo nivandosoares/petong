@@ -47,13 +47,14 @@ test("blocks adoption applications across tenants", () => {
       service.submitApplication({
         tenantId: "ngo_blue",
         petId: pet.id,
+        applicantUserId: "user_1",
         adopterName: "Sam"
       }),
     TenantMismatchError
   );
 });
 
-test("approves applications inside the same tenant and updates pet status", () => {
+test("reviews applications inside the same tenant and tracks status history", () => {
   const service = new AdoptionService();
   const pet = service.registerPet({
     tenantId: "ngo_red",
@@ -64,19 +65,37 @@ test("approves applications inside the same tenant and updates pet status", () =
   const application = service.submitApplication({
     tenantId: "ngo_red",
     petId: pet.id,
+    applicantUserId: "user_1",
     adopterName: "Sam"
   });
 
-  const result = service.approveApplication({
+  service.reviewApplication({
     tenantId: "ngo_red",
-    applicationId: application.id
+    applicationId: application.id,
+    reviewerUserId: "user_2",
+    status: "under_review",
+    internalNote: "Home visit scheduled"
+  });
+
+  const result = service.reviewApplication({
+    tenantId: "ngo_red",
+    applicationId: application.id,
+    reviewerUserId: "user_2",
+    status: "approved",
+    internalNote: "Approved after interview"
   });
 
   assert.equal(result.application.status, "approved");
   assert.equal(result.pet.status, "pending_adoption");
+  assert.equal(result.application.statusHistory.length, 3);
+  assert.equal(result.application.internalNotes.length, 2);
   assert.deepEqual(
     service.listApplicationsByTenant("ngo_red").map((item) => item.adopterName),
     ["Sam"]
+  );
+  assert.deepEqual(
+    service.listApplicationsByApplicant("user_1").map((item) => item.id),
+    [application.id]
   );
 });
 

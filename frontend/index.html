@@ -198,6 +198,10 @@
               <span>Adopter Name</span>
               <input name="adopterName" required autocomplete="off">
             </label>
+            <label class="field">
+              <span>Message</span>
+              <input name="message" autocomplete="off">
+            </label>
             <button class="button" type="submit">Submit Application</button>
           </form>
         </article>
@@ -263,13 +267,22 @@
         <article class="panel">
           <div class="panel-header">
             <h2>Applications</h2>
-            <p>Approve requests without crossing tenant boundaries.</p>
+            <p>Review requests without crossing tenant boundaries.</p>
           </div>
           <div id="applications-list" class="list"></div>
         </article>
       </section>
 
       <section class="layout">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>My Applications</h2>
+            <p>Track the status of your submitted adoption requests.</p>
+          </div>
+          <button id="refresh-my-applications-button" class="button button-secondary" type="button">Refresh My Applications</button>
+          <div id="my-applications-list" class="list"></div>
+        </article>
+
         <article class="panel">
           <div class="panel-header">
             <h2>Public Pet Listing Preview</h2>

@@ -267,7 +267,7 @@ users can save an adoption profile and receive ranked pet recommendations in the
 ISSUE-016
 Implement Sprint 5 adoption application workflow
 
-status: open
+status: closed
 priority: high
 type: feature
 
@@ -278,3 +278,19 @@ surface status progression in the frontend for adopters and staff
 
 done criteria:
 the application workflow supports pending, under_review, approved, and rejected states with tracked history
+
+---
+
+ISSUE-017
+Implement Sprint 6 donation transparency
+
+status: open
+priority: high
+type: feature
+
+description:
+add donation campaigns, donation records, expense records, and a public transparency dashboard
+surface campaign progress and spending summaries in both the backend API and frontend tenant pages
+
+done criteria:
+visitors can view campaign totals, received donations, and recorded expenses for each NGO

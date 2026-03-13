@@ -203,6 +203,11 @@ class PlatformService {
       }));
   }
 
+  getMembershipForUser(tenantId, userId) {
+    const membership = this.#findMembership(tenantId, userId);
+    return membership ? { ...membership } : null;
+  }
+
   resolveTenantBySlug(slug) {
     const tenant = Array.from(this.tenants.values()).find((item) => item.slug === slug);
     if (!tenant) {

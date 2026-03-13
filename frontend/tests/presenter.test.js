@@ -8,6 +8,7 @@ const {
   renderAuthState,
   renderApplications,
   renderDiscoveryMatches,
+  renderMyApplications,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
@@ -39,24 +40,44 @@ test("renders pet cards", () => {
   assert.match(html, /Pet ID: pet_1/);
 });
 
-test("renders approval buttons only for submitted applications", () => {
+test("renders review buttons only for pending and under-review applications", () => {
   const html = renderApplications([
     {
       id: "application_1",
       adopterName: "Sam",
       petId: "pet_1",
-      status: "submitted"
+      message: "Ready to adopt",
+      statusHistory: [{ status: "pending" }],
+      status: "pending"
     },
     {
       id: "application_2",
       adopterName: "Riley",
       petId: "pet_2",
+      message: "",
+      statusHistory: [{ status: "pending" }, { status: "approved" }],
       status: "approved"
     }
   ]);
 
-  assert.match(html, /data-approve-id="application_1"/);
-  assert.doesNotMatch(html, /data-approve-id="application_2"/);
+  assert.match(html, /data-review-id="application_1"/);
+  assert.doesNotMatch(html, /data-review-id="application_2"/);
+  assert.match(html, /Ready to adopt/);
+});
+
+test("renders applicant-facing applications", () => {
+  const html = renderMyApplications([
+    {
+      id: "application_1",
+      adopterName: "Sam",
+      petId: "pet_1",
+      message: "Quiet apartment and remote work.",
+      status: "under_review"
+    }
+  ]);
+
+  assert.match(html, /under_review/);
+  assert.match(html, /Quiet apartment and remote work/);
 });
 
 test("renders guest auth state and tenant cards", () => {

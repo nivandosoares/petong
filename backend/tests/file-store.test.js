@@ -27,12 +27,16 @@ test("persists pets and applications across service instances", () => {
     const application = firstService.submitApplication({
       tenantId: "ngo_red",
       petId: pet.id,
+      applicantUserId: "user_1",
       adopterName: "Sam"
     });
 
-    firstService.approveApplication({
+    firstService.reviewApplication({
       tenantId: "ngo_red",
-      applicationId: application.id
+      applicationId: application.id,
+      reviewerUserId: "user_2",
+      status: "approved",
+      internalNote: "Approved in persistence test"
     });
 
     const secondService = new AdoptionService({

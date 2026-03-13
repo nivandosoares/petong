@@ -61,15 +61,47 @@ function renderApplications(applications) {
             <span class="badge">${escapeHtml(application.status)}</span>
           </div>
           <p class="card-meta">Pet ID: ${escapeHtml(application.petId)}</p>
+          <p class="card-meta">Applicant message: ${escapeHtml(application.message || "No message provided.")}</p>
+          <p class="card-meta">History entries: ${escapeHtml(String(application.statusHistory?.length ?? 0))}</p>
           ${
-            application.status === "submitted"
+            ["pending", "under_review"].includes(application.status)
               ? `<div class="card-actions">
-                  <button class="button" type="button" data-approve-id="${escapeHtml(application.id)}">
+                  <button class="button button-secondary" type="button" data-review-id="${escapeHtml(application.id)}" data-review-status="under_review">
+                    Mark Under Review
+                  </button>
+                  <button class="button" type="button" data-review-id="${escapeHtml(application.id)}" data-review-status="approved">
                     Approve
+                  </button>
+                  <button class="button button-secondary" type="button" data-review-id="${escapeHtml(application.id)}" data-review-status="rejected">
+                    Reject
                   </button>
                 </div>`
               : ""
           }
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderMyApplications(applications) {
+  if (!applications.length) {
+    return '<div class="empty">You have not submitted adoption applications yet.</div>';
+  }
+
+  return applications
+    .map(
+      (application) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(application.adopterName)}</h3>
+              <p class="card-meta">Application ID: ${escapeHtml(application.id)}</p>
+            </div>
+            <span class="badge">${escapeHtml(application.status)}</span>
+          </div>
+          <p class="card-meta">Pet ID: ${escapeHtml(application.petId)}</p>
+          <p class="card-meta">${escapeHtml(application.message || "No message provided.")}</p>
         </article>
       `
     )
@@ -90,6 +122,7 @@ const presenter = {
   renderAuthState,
   renderApplications,
   renderDiscoveryMatches,
+  renderMyApplications,
   renderPublicPetCards,
   renderPublicTenant,
   renderPets,
