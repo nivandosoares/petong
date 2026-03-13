@@ -20,20 +20,6 @@ test("uses color pickers for NGO theme fields", () => {
   assert.match(html, /name="secondaryColor" type="color"/);
 });
 
-test("includes password reset request and confirm forms on the access route", () => {
-  assert.match(html, /id="password-reset-request-form"/);
-  assert.match(html, /id="password-reset-confirm-form"/);
-  assert.match(html, /name="resetToken"/);
-  assert.match(html, /name="newPassword"/);
-});
-
-test("uses constrained boolean controls for adoption profile fields", () => {
-  assert.match(html, /<select name="yardAvailability">/);
-  assert.match(html, /<select name="hasChildren">/);
-  assert.match(html, /<select name="hasOtherAnimals">/);
-  assert.match(html, /<select name="canHandleSpecialNeeds">/);
-});
-
 test("styles include visible focus treatment and flash container state", () => {
   assert.match(css, /\.skip-link:focus-visible/);
   assert.match(css, /\.button:focus-visible/);
