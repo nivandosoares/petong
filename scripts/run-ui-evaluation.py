@@ -212,7 +212,18 @@ def main():
             {"url": f"{args.base_url.rstrip('/')}/", "title": "Home", "text": "Every adoption workflow deserves a warmer front door.", "active_link": "/"},
             {"url": f"{args.base_url.rstrip('/')}/about", "title": "About", "text": "Built for rescue teams that need speed and trust", "active_link": "/about"},
             {"url": f"{args.base_url.rstrip('/')}/login", "title": "Login", "text": "Authentication"},
-            {"url": f"{args.base_url.rstrip('/')}/dashboard/transparency", "title": "Transparency", "text": "Transparency Summary", "active_link": "/dashboard/transparency"},
+            {
+                "url": f"{args.base_url.rstrip('/')}/dashboard/transparency",
+                "title": "Transparency",
+                "text": "No transparency records available yet.",
+                "active_link": "/dashboard/transparency",
+            },
+            {
+                "url": f"{args.base_url.rstrip('/')}/dashboard/pets",
+                "title": "Pets",
+                "text": "No pets registered for this tenant yet.",
+                "active_link": "/dashboard/pets",
+            },
             {"url": f"{args.base_url.rstrip('/')}/t/{seeded['slug']}", "title": seeded["tenant_name"], "text": seeded["tenant_name"]},
             {"url": f"{args.base_url.rstrip('/')}/missing-route", "title": "Page Not Found", "text": "Page not found"},
         ]

@@ -64,8 +64,12 @@
 
   refreshPlatform().then(async () => {
     await loadPublicTenantView();
-    if (isWorkspaceRoute() && authToken) {
-      await refreshBoard();
+    if (isWorkspaceRoute()) {
+      if (authToken) {
+        await refreshBoard();
+      } else {
+        renderGuestWorkspaceState();
+      }
       await refreshDiscovery();
       await refreshMyApplications();
     }
@@ -75,6 +79,9 @@
     if (!authToken) {
       session = null;
       renderPlatform();
+      if (isWorkspaceRoute()) {
+        renderGuestWorkspaceState();
+      }
       return;
     }
 
@@ -86,6 +93,9 @@
       session = null;
       window.localStorage.removeItem("petong_auth_token");
       renderPlatform();
+      if (isWorkspaceRoute()) {
+        renderGuestWorkspaceState();
+      }
       setFlash(error.message, true);
     }
   }
@@ -442,6 +452,17 @@
     elements.campaignList.innerHTML = presenter.renderCampaignCards(state.campaigns);
     elements.donationList.innerHTML = presenter.renderDonationCards(state.donations);
     elements.expenseList.innerHTML = presenter.renderExpenseCards(state.expenses);
+  }
+
+  function renderGuestWorkspaceState() {
+    renderBoard({
+      pets: [],
+      applications: [],
+      transparency: null,
+      campaigns: [],
+      donations: [],
+      expenses: []
+    });
   }
 
   function renderPlatform() {

@@ -28,3 +28,4 @@ All notable autonomous-agent changes should be recorded here.
 - Fixed direct shell routing for `/about` and `/register`, and added an optional Python Selenium UI smoke-test harness for Chrome WebDriver automation.
 - Expanded the Selenium harness to seed public-route data automatically and default to a visible Chrome session unless `--headless` is requested.
 - Added a Chrome-based UI evaluation routine with JSON findings output, route-aware title/nav checks, and fixes for static titles, missing `aria-current`, and favicon console noise.
+- Fixed guest dashboard routes so pets and transparency sections render explicit empty states instead of blank containers, and tightened the UI evaluator to enforce those states.
