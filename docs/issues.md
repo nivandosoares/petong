@@ -66,3 +66,21 @@ stop only for blockers or human decisions
 
 done criteria:
 agent loop writes a next-cycle plan from test output and exits only on blocker states
+
+---
+
+ISSUE-005
+Implement initial tenant-aware adoption backend slice
+
+status: closed
+priority: high
+type: feature
+
+description:
+add the first product implementation code to the repository
+model tenant-scoped pets and adoption applications
+enforce tenant isolation in the core service
+cover the behavior with automated backend tests
+
+done criteria:
+repository contains runnable backend domain code and tests for tenant-aware adoption workflows

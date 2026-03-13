@@ -1,0 +1,8 @@
+{
+  "name": "petong",
+  "version": "0.1.4",
+  "private": true,
+  "scripts": {
+    "test:backend": "node --test backend/tests/*.test.js"
+  }
+}
