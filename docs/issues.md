@@ -208,3 +208,38 @@ cover the new dashboard and public branding flows with tests
 
 done criteria:
 each NGO has a customizable public landing page and admins can manage profile and members
+
+---
+
+ISSUE-013
+Document database pipeline and agent handoff installation
+
+status: closed
+priority: high
+type: docs
+
+description:
+add database implementation to the delivery pipeline
+formalize the code/doc/test standard for infrastructure and data work
+create a handoff document so another agent can install prerequisites and continue the project
+
+done criteria:
+repository contains a database pipeline note and a durable install/continuation handoff doc
+
+---
+
+ISSUE-014
+Implement Sprint 3 pet management
+
+status: open
+priority: high
+type: feature
+
+description:
+expand the pet domain with richer fields and NGO management workflows
+add pet editing and archiving
+prepare public pet listing on tenant landing pages
+plan the first photo support slice without weakening tenant isolation
+
+done criteria:
+NGOs can manage richer pet records and the public tenant experience can list available pets

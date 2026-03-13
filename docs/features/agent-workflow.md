@@ -40,3 +40,14 @@ See `docs/features/test-discovery.md` for the supported layouts and script names
 The autonomous workflow must stop for explicit human approval before installing runtimes, package managers, external CLIs, or system services.
 
 This now applies to infrastructure helpers such as Cloudflare Tunnel as well.
+
+## Delivery standard
+
+The project now uses a strict `code/doc/test` pipeline for runtime and database-oriented work.
+
+That means an agent should not consider a slice complete unless:
+
+- the code path is implemented
+- the relevant docs are updated
+- automated tests cover the critical behavior
+- live runtime verification is performed when the feature changes user-visible or persistence behavior

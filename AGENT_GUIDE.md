@@ -18,6 +18,7 @@ Build and maintain a multi-tenant SaaS platform for animal rescue NGOs and pet a
 8. Update `CHANGELOG.md` for every completed issue.
 9. Bump only the patch version in `VERSION` unless a human requests otherwise.
 10. Preserve tenant isolation across all entities, queries, background jobs, and APIs.
+11. Deliver infrastructure and data-layer work using the `code/doc/test` standard.
 
 ## Hard limits
 
@@ -40,18 +41,19 @@ The agent must not, without explicit human approval:
 5. Otherwise select the first issue with `status: open`.
 6. Mark the active issue `status: in_progress`.
 7. Implement the minimal viable solution.
-8. Run relevant tests.
-9. Fix failures caused by the change.
-10. Update docs in `docs/` and `CHANGELOG.md`.
-11. Bump `VERSION` patch number.
-12. Commit with one of these tags:
+8. Update code, docs, and tests together when the change touches runtime, data, or product behavior.
+9. Run relevant tests.
+10. Fix failures caused by the change.
+11. Update docs in `docs/`, `CHANGELOG.md`, and `docs/AGENT_HANDOFF.md` when operator setup or continuation context changes.
+12. Bump `VERSION` patch number.
+13. Commit with one of these tags:
    - `[feature]`
    - `[bugfix]`
    - `[refactor]`
    - `[test]`
    - `[docs]`
-13. Mark the issue `status: closed`.
-14. Repeat.
+14. Mark the issue `status: closed`.
+15. Repeat.
 
 ## Escalation conditions
 
@@ -68,6 +70,7 @@ Stop and request human input if:
 
 - `docs/issues.md`: local issue queue
 - `docs/features/`: feature notes and implementation decisions
+- `docs/AGENT_HANDOFF.md`: install and continuation guide for future agents
 - `CHANGELOG.md`: chronological delivery log
 - `VERSION`: current semver version
 - `tmp/agent-loop/next-action.md`: generated runtime plan from the latest test results
