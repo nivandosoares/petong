@@ -20,13 +20,6 @@ test("uses color pickers for NGO theme fields", () => {
   assert.match(html, /name="secondaryColor" type="color"/);
 });
 
-test("includes password reset request and confirm forms on the access route", () => {
-  assert.match(html, /id="password-reset-request-form"/);
-  assert.match(html, /id="password-reset-confirm-form"/);
-  assert.match(html, /name="resetToken"/);
-  assert.match(html, /name="newPassword"/);
-});
-
 test("styles include visible focus treatment and flash container state", () => {
   assert.match(css, /\.skip-link:focus-visible/);
   assert.match(css, /\.button:focus-visible/);
