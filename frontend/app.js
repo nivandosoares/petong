@@ -637,6 +637,10 @@
   function setFlash(message, isError) {
     elements.flash.textContent = message;
     elements.flash.className = isError ? "flash flash-error" : "flash";
+
+    if (message) {
+      elements.flash.focus();
+    }
   }
 
   function valueFrom(form, fieldName) {
