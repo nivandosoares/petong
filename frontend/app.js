@@ -566,7 +566,11 @@
       return { view: "landing", key: "landing", sections: [] };
     }
 
-    if (pathname === "/login") {
+    if (pathname === "/about") {
+      return { view: "about", key: "about", sections: [] };
+    }
+
+    if (pathname === "/login" || pathname === "/register") {
       return { view: "dashboard", key: "login", sections: ["access"] };
     }
 
@@ -602,7 +606,7 @@
       return { view: "public", key: "public", sections: [] };
     }
 
-    return { view: "landing", key: "landing", sections: [] };
+    return { view: "not-found", key: "not-found", sections: [] };
   }
 
   function applyPageLayout() {
@@ -637,6 +641,10 @@
   function setFlash(message, isError) {
     elements.flash.textContent = message;
     elements.flash.className = isError ? "flash flash-error" : "flash";
+
+    if (message) {
+      elements.flash.focus();
+    }
   }
 
   function valueFrom(form, fieldName) {
