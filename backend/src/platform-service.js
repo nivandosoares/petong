@@ -131,18 +131,21 @@ class PlatformService {
   }
 
   addTenantMember(input) {
-    assertRequired(input, ["actorUserId", "tenantId", "userId", "role"]);
+    assertRequired(input, ["actorUserId", "tenantId", "role"]);
 
     const actorMembership = this.#findMembership(input.tenantId, input.actorUserId);
     if (!actorMembership || actorMembership.role !== "ngo_admin") {
       throw new AuthorizationError("Only NGO admins can manage tenant members");
     }
 
-    if (!this.users.has(input.userId)) {
-      throw new NotFoundError(`User ${input.userId} was not found`);
+    const user = input.userId
+      ? this.users.get(input.userId)
+      : Array.from(this.users.values()).find((entry) => entry.email === normalizeEmail(input.email));
+    if (!user) {
+      throw new NotFoundError("Tenant member user was not found");
     }
 
-    const existing = this.#findMembership(input.tenantId, input.userId);
+    const existing = this.#findMembership(input.tenantId, user.id);
     if (existing) {
       existing.role = input.role;
       this.#persist();
@@ -151,11 +154,44 @@ class PlatformService {
 
     const membership = this.#createMembership({
       tenantId: input.tenantId,
-      userId: input.userId,
+      userId: user.id,
       role: input.role
     });
     this.#persist();
     return { ...membership };
+  }
+
+  updateTenant(input) {
+    assertRequired(input, ["actorUserId", "tenantId"]);
+
+    const actorMembership = this.#findMembership(input.tenantId, input.actorUserId);
+    if (!actorMembership || actorMembership.role !== "ngo_admin") {
+      throw new AuthorizationError("Only NGO admins can update tenant settings");
+    }
+
+    const tenant = this.tenants.get(input.tenantId);
+    if (!tenant) {
+      throw new NotFoundError(`Tenant ${input.tenantId} was not found`);
+    }
+
+    if (input.name !== undefined) {
+      tenant.name = input.name;
+    }
+    if (input.logo !== undefined) {
+      tenant.logo = input.logo;
+    }
+    if (input.primaryColor !== undefined) {
+      tenant.primaryColor = input.primaryColor;
+    }
+    if (input.secondaryColor !== undefined) {
+      tenant.secondaryColor = input.secondaryColor;
+    }
+    if (input.description !== undefined) {
+      tenant.description = input.description;
+    }
+
+    this.#persist();
+    return this.getTenantById(tenant.id);
   }
 
   listUserTenants(userId) {

@@ -4,10 +4,14 @@
   const presenter = window.PetongPresenter;
 
   const elements = {
+    publicTenantView: document.querySelector("#public-tenant-view"),
     authState: document.querySelector("#auth-state"),
     registerForm: document.querySelector("#register-form"),
     loginForm: document.querySelector("#login-form"),
     tenantForm: document.querySelector("#tenant-form"),
+    tenantThemeForm: document.querySelector("#tenant-theme-form"),
+    memberForm: document.querySelector("#member-form"),
+    tenantEditor: document.querySelector("#tenant-editor"),
     tenantList: document.querySelector("#tenant-list"),
     tenantId: document.querySelector("#tenant-id"),
     refreshButton: document.querySelector("#refresh-button"),
@@ -24,12 +28,17 @@
   elements.registerForm.addEventListener("submit", handleRegisterSubmit);
   elements.loginForm.addEventListener("submit", handleLoginSubmit);
   elements.tenantForm.addEventListener("submit", handleTenantSubmit);
+  elements.tenantThemeForm.addEventListener("submit", handleTenantThemeSubmit);
+  elements.memberForm.addEventListener("submit", handleMemberSubmit);
   elements.refreshButton.addEventListener("click", refreshBoard);
   elements.petForm.addEventListener("submit", handlePetSubmit);
   elements.applicationForm.addEventListener("submit", handleApplicationSubmit);
   elements.applicationsList.addEventListener("click", handleApplicationAction);
 
-  refreshPlatform().then(refreshBoard);
+  refreshPlatform().then(async () => {
+    await loadPublicTenantView();
+    await refreshBoard();
+  });
 
   async function refreshPlatform() {
     if (!authToken) {
@@ -138,6 +147,49 @@
     }
   }
 
+  async function handleTenantThemeSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest(`/api/tenants/${valueFrom(event.currentTarget, "tenantId")}`, {
+        method: "PATCH",
+        auth: true,
+        body: {
+          logo: valueFrom(event.currentTarget, "logo"),
+          primaryColor: valueFrom(event.currentTarget, "primaryColor"),
+          secondaryColor: valueFrom(event.currentTarget, "secondaryColor"),
+          description: valueFrom(event.currentTarget, "description")
+        }
+      });
+
+      await refreshPlatform();
+      await loadPublicTenantView();
+      setFlash("NGO theme updated.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
+  async function handleMemberSubmit(event) {
+    event.preventDefault();
+
+    try {
+      await apiRequest(`/api/tenants/${valueFrom(event.currentTarget, "tenantId")}/members`, {
+        method: "POST",
+        auth: true,
+        body: {
+          email: valueFrom(event.currentTarget, "email"),
+          role: valueFrom(event.currentTarget, "role")
+        }
+      });
+
+      await refreshPlatform();
+      setFlash("Member added.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
   async function handlePetSubmit(event) {
     event.preventDefault();
 
@@ -208,6 +260,23 @@
   function renderPlatform() {
     elements.authState.innerHTML = presenter.renderAuthState(session);
     elements.tenantList.innerHTML = presenter.renderTenantCards(session?.tenants ?? []);
+    elements.tenantEditor.innerHTML = presenter.renderTenantEditor(session?.tenants?.[0] ?? null);
+  }
+
+  async function loadPublicTenantView() {
+    const slug = publicTenantSlug();
+    if (!slug) {
+      elements.publicTenantView.innerHTML = "";
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/api/public/tenants/${slug}`, {});
+      elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant);
+    } catch (error) {
+      elements.publicTenantView.innerHTML = "";
+      setFlash(error.message, true);
+    }
   }
 
   async function apiRequest(path, options) {
@@ -245,6 +314,11 @@
 
   function getTenantId() {
     return elements.tenantId.value.trim();
+  }
+
+  function publicTenantSlug() {
+    const match = window.location.pathname.match(/^\/(?:ngo|t)\/([^/]+)$/);
+    return match ? match[1] : "";
   }
 
   function setFlash(message, isError) {

@@ -161,6 +161,14 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  const publicTenantMatch = url.pathname.match(/^\/api\/public\/tenants\/([^/]+)$/);
+  if (method === "GET" && publicTenantMatch) {
+    writeJson(response, 200, {
+      tenant: services.platformService.resolveTenantBySlug(publicTenantMatch[1])
+    });
+    return;
+  }
+
   const user = authenticateRequest(request, services.platformService);
 
   if (method === "GET" && url.pathname === "/api/session") {
@@ -194,6 +202,30 @@ async function routeRequest(request, response, services) {
     return;
   }
 
+  const tenantMatch = url.pathname.match(/^\/api\/tenants\/([^/]+)$/);
+  if (method === "GET" && tenantMatch) {
+    writeJson(response, 200, {
+      tenant: services.platformService.getTenantById(tenantMatch[1])
+    });
+    return;
+  }
+
+  if ((method === "PATCH" || method === "POST") && tenantMatch) {
+    const body = await readJsonBody(request);
+    writeJson(response, 200, {
+      tenant: services.platformService.updateTenant({
+        actorUserId: user.id,
+        tenantId: tenantMatch[1],
+        name: body.name,
+        logo: body.logo,
+        primaryColor: body.primaryColor,
+        secondaryColor: body.secondaryColor,
+        description: body.description
+      })
+    });
+    return;
+  }
+
   const memberMatch = url.pathname.match(/^\/api\/tenants\/([^/]+)\/members$/);
   if (method === "POST" && memberMatch) {
     const body = await readJsonBody(request);
@@ -202,6 +234,7 @@ async function routeRequest(request, response, services) {
         actorUserId: user.id,
         tenantId: memberMatch[1],
         userId: body.userId,
+        email: body.email,
         role: body.role
       })
     });
@@ -329,7 +362,12 @@ function authenticateRequest(request, platformService) {
 }
 
 function isAppShellRoute(pathname) {
-  return pathname === "/login" || pathname === "/dashboard" || /^\/t\/[^/]+$/.test(pathname);
+  return (
+    pathname === "/login" ||
+    pathname === "/dashboard" ||
+    /^\/t\/[^/]+$/.test(pathname) ||
+    /^\/ngo\/[^/]+$/.test(pathname)
+  );
 }
 
 module.exports = {

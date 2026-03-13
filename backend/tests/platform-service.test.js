@@ -147,3 +147,45 @@ test("persists users and tenants across service restarts", () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
+
+test("allows ngo admins to update tenant branding and add members by email", () => {
+  const service = new PlatformService({ jwtSecret: "test-secret" });
+  const admin = service.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  }).user;
+  service.registerUser({
+    name: "Leo",
+    email: "leo@example.com",
+    password: "password123"
+  });
+
+  const tenant = service.createTenant({
+    creatorUserId: admin.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  const updated = service.updateTenant({
+    actorUserId: admin.id,
+    tenantId: tenant.id,
+    logo: "https://example.com/logo.png",
+    primaryColor: "#123456",
+    secondaryColor: "#abcdef",
+    description: "Updated rescue collective"
+  });
+
+  service.addTenantMember({
+    actorUserId: admin.id,
+    tenantId: tenant.id,
+    email: "leo@example.com",
+    role: "ngo_staff"
+  });
+
+  assert.equal(updated.theme.primaryColor, "#123456");
+  assert.equal(service.getTenantById(tenant.id).members.length, 2);
+});

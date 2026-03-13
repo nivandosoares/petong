@@ -16,3 +16,4 @@ All notable autonomous-agent changes should be recorded here.
 - Added the first interactive frontend for the adoption workflow, served by the backend with frontend tests.
 - Added file-backed persistence so pets and applications survive backend restarts.
 - Added Sprint 1 platform foundations with tenant entities, JWT auth, memberships, tenant resolution, and integrated frontend shells.
+- Added Sprint 2 NGO management, branding updates, member administration, and public tenant landing pages.

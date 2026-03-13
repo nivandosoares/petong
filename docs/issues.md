@@ -190,3 +190,21 @@ cover the core sprint 1 flows with automated backend and frontend tests
 
 done criteria:
 users can register, NGOs can be created, users can join an NGO, and tenant routes resolve in the running application
+
+---
+
+ISSUE-012
+Implement Sprint 2 NGO management and public theming
+
+status: closed
+priority: high
+type: feature
+
+description:
+allow NGO admins to update tenant branding and manage members
+serve public NGO landing pages with tenant-specific theme data
+support /ngo/{slug} and /t/{slug} public tenant routes
+cover the new dashboard and public branding flows with tests
+
+done criteria:
+each NGO has a customizable public landing page and admins can manage profile and members

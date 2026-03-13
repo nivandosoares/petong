@@ -8,6 +8,7 @@
   </head>
   <body>
     <main class="shell">
+      <section id="public-tenant-view"></section>
       <section class="hero">
         <p class="eyebrow">Petong</p>
         <h1>Adoption Desk</h1>
@@ -79,6 +80,45 @@
             </label>
             <button class="button" type="submit">Create NGO</button>
           </form>
+          <form id="tenant-theme-form" class="stack">
+            <label class="field">
+              <span>Tenant ID</span>
+              <input name="tenantId" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Logo URL</span>
+              <input name="logo" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Primary Color</span>
+              <input name="primaryColor" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Secondary Color</span>
+              <input name="secondaryColor" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Description</span>
+              <input name="description" autocomplete="off">
+            </label>
+            <button class="button button-secondary" type="submit">Update Theme</button>
+          </form>
+          <form id="member-form" class="stack">
+            <label class="field">
+              <span>Tenant ID</span>
+              <input name="tenantId" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Member Email</span>
+              <input name="email" type="email" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Role</span>
+              <input name="role" value="ngo_staff" autocomplete="off">
+            </label>
+            <button class="button button-secondary" type="submit">Add Member</button>
+          </form>
+          <div id="tenant-editor" class="list"></div>
           <div id="tenant-list" class="list"></div>
         </article>
       </section>

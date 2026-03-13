@@ -92,7 +92,7 @@ test("resolves tenants by slug for public routing", async () => {
 });
 
 test("serves app shells for homepage, login, dashboard, and tenant routes", async () => {
-  for (const pathname of ["/", "/login", "/dashboard", "/t/happy-paws"]) {
+  for (const pathname of ["/", "/login", "/dashboard", "/t/happy-paws", "/ngo/happy-paws"]) {
     const response = await injectWithPlatform({
       method: "GET",
       url: pathname
@@ -101,6 +101,50 @@ test("serves app shells for homepage, login, dashboard, and tenant routes", asyn
     assert.equal(response.statusCode, 200);
     assert.match(response.body, /Petong/);
   }
+});
+
+test("updates tenant branding and serves public tenant data", async () => {
+  const platformService = new PlatformService({ jwtSecret: "test-secret" });
+  const registration = platformService.registerUser({
+    name: "Ana",
+    email: "ana@example.com",
+    password: "password123"
+  });
+  const created = platformService.createTenant({
+    creatorUserId: registration.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  const updated = await injectWithPlatform(
+    {
+      method: "PATCH",
+      url: `/api/tenants/${created.id}`,
+      headers: authHeaders(registration.token),
+      body: {
+        logo: "https://example.com/logo.png",
+        description: "Updated rescue collective"
+      }
+    },
+    platformService
+  );
+
+  assert.equal(updated.statusCode, 200);
+  assert.equal(updated.body.tenant.logo, "https://example.com/logo.png");
+
+  const publicTenant = await injectWithPlatform(
+    {
+      method: "GET",
+      url: "/api/public/tenants/happy-paws"
+    },
+    platformService
+  );
+
+  assert.equal(publicTenant.statusCode, 200);
+  assert.equal(publicTenant.body.tenant.description, "Updated rescue collective");
 });
 
 async function injectWithPlatform(

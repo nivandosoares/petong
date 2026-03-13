@@ -7,8 +7,10 @@ const {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderPublicTenant,
   renderPets,
-  renderTenantCards
+  renderTenantCards,
+  renderTenantEditor
 } = require("../presenter");
 
 test("escapes HTML-special characters", () => {
@@ -71,5 +73,33 @@ test("renders guest auth state and tenant cards", () => {
       }
     ]),
     /Happy Paws/
+  );
+});
+
+test("renders tenant editor and public landing", () => {
+  assert.match(
+    renderTenantEditor({
+      tenant: {
+        name: "Happy Paws",
+        slug: "happy-paws",
+        primaryColor: "#111111",
+        secondaryColor: "#222222"
+      },
+      membership: {
+        role: "ngo_admin"
+      }
+    }),
+    /happy-paws/
+  );
+
+  assert.match(
+    renderPublicTenant({
+      name: "Happy Paws",
+      description: "Rescue collective",
+      primaryColor: "#111111",
+      secondaryColor: "#222222",
+      logo: ""
+    }),
+    /NGO Landing Page/
   );
 });

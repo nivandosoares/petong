@@ -69,8 +69,10 @@ const presenter = {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderPublicTenant,
   renderPets,
-  renderTenantCards
+  renderTenantCards,
+  renderTenantEditor
 };
 
 if (typeof module !== "undefined") {
@@ -126,4 +128,36 @@ function renderTenantCards(tenants) {
       `
     )
     .join("");
+}
+
+function renderTenantEditor(entry) {
+  if (!entry) {
+    return '<div class="empty">Log in and create an NGO to edit branding and members.</div>';
+  }
+
+  return `
+    <article class="card">
+      <div class="card-top">
+        <div>
+          <h3>${escapeHtml(entry.tenant.name)}</h3>
+          <p class="card-meta">Role: ${escapeHtml(entry.membership.role)}</p>
+        </div>
+        <span class="badge">${escapeHtml(entry.tenant.slug)}</span>
+      </div>
+      <p class="card-meta">Theme: ${escapeHtml(entry.tenant.primaryColor)} / ${escapeHtml(entry.tenant.secondaryColor)}</p>
+    </article>
+  `;
+}
+
+function renderPublicTenant(tenant) {
+  return `
+    <section class="public-landing" style="--tenant-primary:${escapeHtml(tenant.primaryColor)};--tenant-secondary:${escapeHtml(tenant.secondaryColor)};">
+      <div class="public-hero">
+        <p class="eyebrow">NGO Landing Page</p>
+        <h1>${escapeHtml(tenant.name)}</h1>
+        <p class="lede">${escapeHtml(tenant.description)}</p>
+        ${tenant.logo ? `<p class="card-meta">Logo URL: ${escapeHtml(tenant.logo)}</p>` : ""}
+      </div>
+    </section>
+  `;
 }
