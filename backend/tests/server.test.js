@@ -39,6 +39,36 @@ test("serves the browser presenter bundle", async () => {
   assert.match(response.body, /PetongPresenter/);
 });
 
+test("returns public pets on the public tenant endpoint", async () => {
+  const service = new AdoptionService();
+  const auth = createAuthContext();
+  const tenant = auth.platformService.createTenant({
+    creatorUserId: auth.user.id,
+    name: "Happy Paws",
+    slug: "happy-paws",
+    primaryColor: "#0f766e",
+    secondaryColor: "#f59e0b",
+    description: "Rescue collective"
+  });
+
+  service.registerPet({
+    tenantId: tenant.id,
+    name: "Luna",
+    species: "dog",
+    city: "Sao Paulo"
+  });
+
+  const response = await injectRequest(service, {
+    method: "GET",
+    url: "/api/public/tenants/happy-paws",
+    platformService: auth.platformService
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.equal(response.body.pets.length, 1);
+  assert.equal(response.body.pets[0].name, "Luna");
+});
+
 test("creates and lists tenant-scoped pets through the API", async () => {
   const service = new AdoptionService();
   const auth = createAuthContext();
@@ -152,6 +182,49 @@ test("approves an application and updates the pet through the API", async () => 
   assert.equal(approveResponse.body.pet.status, "pending_adoption");
 });
 
+test("updates and archives pets through the API", async () => {
+  const service = new AdoptionService();
+  const auth = createAuthContext();
+  const createResponse = await injectRequest(service, {
+    method: "POST",
+    url: "/api/pets",
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
+    body: {
+      name: "Luna",
+      species: "dog"
+    }
+  });
+
+  const updated = await injectRequest(service, {
+    method: "PATCH",
+    url: `/api/pets/${createResponse.body.pet.id}`,
+    headers: jsonHeaders("ngo_red", auth.token),
+    platformService: auth.platformService,
+    body: {
+      description: "Friendly dog",
+      city: "Sao Paulo",
+      size: "medium"
+    }
+  });
+
+  assert.equal(updated.statusCode, 200);
+  assert.equal(updated.body.pet.city, "Sao Paulo");
+
+  const archived = await injectRequest(service, {
+    method: "POST",
+    url: `/api/pets/${createResponse.body.pet.id}/archive`,
+    headers: {
+      authorization: `Bearer ${auth.token}`,
+      "x-tenant-id": "ngo_red"
+    },
+    platformService: auth.platformService
+  });
+
+  assert.equal(archived.statusCode, 200);
+  assert.equal(archived.body.pet.adoptionStatus, "archived");
+});
+
 test("requires tenant headers for protected API routes", async () => {
   const auth = createAuthContext();
   const response = await injectRequest(new AdoptionService(), {
@@ -190,6 +263,7 @@ function createAuthContext() {
 
   return {
     platformService,
+    user: registration.user,
     token: registration.token
   };
 }

@@ -231,7 +231,7 @@ repository contains a database pipeline note and a durable install/continuation 
 ISSUE-014
 Implement Sprint 3 pet management
 
-status: open
+status: closed
 priority: high
 type: feature
 

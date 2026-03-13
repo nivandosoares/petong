@@ -149,8 +149,36 @@
               <input name="species" required autocomplete="off">
             </label>
             <label class="field">
+              <span>Breed</span>
+              <input name="breed" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Size</span>
+              <input name="size" value="medium" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>City</span>
+              <input name="city" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Health Status</span>
+              <input name="healthStatus" value="unknown" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Special Needs</span>
+              <input name="specialNeeds" autocomplete="off">
+            </label>
+            <label class="field">
               <span>Age Group</span>
               <input name="ageGroup" placeholder="adult, puppy, senior" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Description</span>
+              <input name="description" autocomplete="off">
+            </label>
+            <label class="field">
+              <span>Photo URLs</span>
+              <input name="photoUrls" placeholder="comma-separated URLs" autocomplete="off">
             </label>
             <button class="button" type="submit">Add Pet</button>
           </form>
@@ -190,6 +218,16 @@
             <p>Approve requests without crossing tenant boundaries.</p>
           </div>
           <div id="applications-list" class="list"></div>
+        </article>
+      </section>
+
+      <section class="layout">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Public Pet Listing Preview</h2>
+            <p>What visitors see for the current tenant route.</p>
+          </div>
+          <div id="public-pets-list" class="list"></div>
         </article>
       </section>
     </main>

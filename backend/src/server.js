@@ -163,8 +163,10 @@ async function routeRequest(request, response, services) {
 
   const publicTenantMatch = url.pathname.match(/^\/api\/public\/tenants\/([^/]+)$/);
   if (method === "GET" && publicTenantMatch) {
+    const tenant = services.platformService.resolveTenantBySlug(publicTenantMatch[1]);
     writeJson(response, 200, {
-      tenant: services.platformService.resolveTenantBySlug(publicTenantMatch[1])
+      tenant,
+      pets: services.adoptionService.listPublicPetsByTenant(tenant.id)
     });
     return;
   }
@@ -258,9 +260,49 @@ async function routeRequest(request, response, services) {
       tenantId,
       name: body.name,
       species: body.species,
+      breed: body.breed,
+      size: body.size,
+      description: body.description,
+      city: body.city,
+      healthStatus: body.healthStatus,
+      specialNeeds: body.specialNeeds,
+      adoptionStatus: body.adoptionStatus,
+      photoUrls: body.photoUrls,
       ageGroup: body.ageGroup
     });
     writeJson(response, 201, { pet });
+    return;
+  }
+
+  const petMatch = url.pathname.match(/^\/api\/pets\/([^/]+)$/);
+  if ((method === "PATCH" || method === "POST") && petMatch) {
+    const body = await readJsonBody(request);
+    const pet = services.adoptionService.updatePet({
+      tenantId,
+      petId: petMatch[1],
+      name: body.name,
+      species: body.species,
+      breed: body.breed,
+      size: body.size,
+      description: body.description,
+      city: body.city,
+      healthStatus: body.healthStatus,
+      specialNeeds: body.specialNeeds,
+      adoptionStatus: body.adoptionStatus,
+      photoUrls: body.photoUrls,
+      ageGroup: body.ageGroup
+    });
+    writeJson(response, 200, { pet });
+    return;
+  }
+
+  const petArchiveMatch = url.pathname.match(/^\/api\/pets\/([^/]+)\/archive$/);
+  if (method === "POST" && petArchiveMatch) {
+    const pet = services.adoptionService.archivePet({
+      tenantId,
+      petId: petArchiveMatch[1]
+    });
+    writeJson(response, 200, { pet });
     return;
   }
 

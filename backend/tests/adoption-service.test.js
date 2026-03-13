@@ -16,6 +16,9 @@ test("registers and lists pets within the same tenant only", () => {
     tenantId: "ngo_red",
     name: "Luna",
     species: "dog",
+    breed: "mixed",
+    size: "medium",
+    city: "Sao Paulo",
     ageGroup: "adult"
   });
 
@@ -26,6 +29,7 @@ test("registers and lists pets within the same tenant only", () => {
   });
 
   assert.equal(luna.id, "pet_1");
+  assert.equal(luna.breed, "mixed");
   assert.deepEqual(service.listPetsByTenant("ngo_red").map((pet) => pet.name), ["Luna"]);
   assert.deepEqual(service.listPetsByTenant("ngo_blue").map((pet) => pet.name), ["Milo"]);
 });
@@ -87,4 +91,31 @@ test("rejects invalid pet registrations", () => {
       }),
     ValidationError
   );
+});
+
+test("updates, archives, and filters public pets", () => {
+  const service = new AdoptionService();
+  const pet = service.registerPet({
+    tenantId: "ngo_red",
+    name: "Luna",
+    species: "dog"
+  });
+
+  const updated = service.updatePet({
+    tenantId: "ngo_red",
+    petId: pet.id,
+    description: "Friendly dog",
+    photoUrls: ["https://example.com/luna-1.jpg"]
+  });
+
+  assert.equal(updated.description, "Friendly dog");
+  assert.equal(updated.photoUrls.length, 1);
+  assert.equal(service.listPublicPetsByTenant("ngo_red").length, 1);
+
+  service.archivePet({
+    tenantId: "ngo_red",
+    petId: pet.id
+  });
+
+  assert.equal(service.listPublicPetsByTenant("ngo_red").length, 0);
 });

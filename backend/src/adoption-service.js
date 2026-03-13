@@ -42,8 +42,17 @@ class AdoptionService {
       tenantId: input.tenantId,
       name: input.name,
       species: input.species,
+      breed: input.breed ?? "",
+      size: input.size ?? "medium",
+      description: input.description ?? "",
+      city: input.city ?? "",
+      healthStatus: input.healthStatus ?? "unknown",
+      specialNeeds: input.specialNeeds ?? "",
+      adoptionStatus: input.adoptionStatus ?? "available",
+      photoUrls: Array.isArray(input.photoUrls) ? input.photoUrls : [],
       ageGroup: input.ageGroup ?? "unknown",
-      status: "available",
+      status: input.adoptionStatus ?? "available",
+      archivedAt: null,
       createdAt: new Date().toISOString()
     };
 
@@ -56,6 +65,75 @@ class AdoptionService {
     return Array.from(this.pets.values())
       .filter((pet) => pet.tenantId === tenantId)
       .map((pet) => ({ ...pet }));
+  }
+
+  listPublicPetsByTenant(tenantId) {
+    return Array.from(this.pets.values())
+      .filter((pet) => pet.tenantId === tenantId && !pet.archivedAt && pet.adoptionStatus === "available")
+      .map((pet) => ({ ...pet }));
+  }
+
+  updatePet(input) {
+    assertRequired(input, ["tenantId", "petId"]);
+
+    const pet = this.pets.get(input.petId);
+    if (!pet) {
+      throw new NotFoundError(`Pet ${input.petId} was not found`);
+    }
+
+    if (pet.tenantId !== input.tenantId) {
+      throw new TenantMismatchError("Pet does not belong to the provided tenant");
+    }
+
+    const fields = [
+      "name",
+      "species",
+      "breed",
+      "size",
+      "description",
+      "city",
+      "healthStatus",
+      "specialNeeds",
+      "adoptionStatus",
+      "ageGroup"
+    ];
+
+    for (const field of fields) {
+      if (input[field] !== undefined) {
+        pet[field] = input[field];
+      }
+    }
+
+    if (input.adoptionStatus !== undefined) {
+      pet.status = input.adoptionStatus;
+    }
+
+    if (input.photoUrls !== undefined) {
+      pet.photoUrls = Array.isArray(input.photoUrls) ? input.photoUrls : [];
+    }
+
+    this.#persist();
+    return { ...pet };
+  }
+
+  archivePet(input) {
+    assertRequired(input, ["tenantId", "petId"]);
+
+    const pet = this.pets.get(input.petId);
+    if (!pet) {
+      throw new NotFoundError(`Pet ${input.petId} was not found`);
+    }
+
+    if (pet.tenantId !== input.tenantId) {
+      throw new TenantMismatchError("Pet does not belong to the provided tenant");
+    }
+
+    pet.archivedAt = new Date().toISOString();
+    pet.adoptionStatus = "archived";
+    pet.status = "archived";
+    this.#persist();
+
+    return { ...pet };
   }
 
   submitApplication(input) {

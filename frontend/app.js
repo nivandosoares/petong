@@ -18,6 +18,7 @@
     petForm: document.querySelector("#pet-form"),
     applicationForm: document.querySelector("#application-form"),
     petsList: document.querySelector("#pets-list"),
+    publicPetsList: document.querySelector("#public-pets-list"),
     applicationsList: document.querySelector("#applications-list"),
     flash: document.querySelector("#flash")
   };
@@ -34,6 +35,7 @@
   elements.petForm.addEventListener("submit", handlePetSubmit);
   elements.applicationForm.addEventListener("submit", handleApplicationSubmit);
   elements.applicationsList.addEventListener("click", handleApplicationAction);
+  elements.petsList.addEventListener("click", handlePetAction);
 
   refreshPlatform().then(async () => {
     await loadPublicTenantView();
@@ -200,6 +202,16 @@
         body: {
           name: valueFrom(event.currentTarget, "name"),
           species: valueFrom(event.currentTarget, "species"),
+          breed: valueFrom(event.currentTarget, "breed"),
+          size: valueFrom(event.currentTarget, "size"),
+          city: valueFrom(event.currentTarget, "city"),
+          healthStatus: valueFrom(event.currentTarget, "healthStatus"),
+          specialNeeds: valueFrom(event.currentTarget, "specialNeeds"),
+          description: valueFrom(event.currentTarget, "description"),
+          photoUrls: valueFrom(event.currentTarget, "photoUrls")
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
           ageGroup: valueFrom(event.currentTarget, "ageGroup")
         }
       });
@@ -252,6 +264,26 @@
     }
   }
 
+  async function handlePetAction(event) {
+    const button = event.target.closest("[data-archive-id]");
+    if (!button) {
+      return;
+    }
+
+    try {
+      await apiRequest(`/api/pets/${button.dataset.archiveId}/archive`, {
+        method: "POST",
+        tenantId: getTenantId()
+      });
+
+      await refreshBoard();
+      await loadPublicTenantView();
+      setFlash("Pet archived.", false);
+    } catch (error) {
+      setFlash(error.message, true);
+    }
+  }
+
   function renderBoard(state) {
     elements.petsList.innerHTML = presenter.renderPets(state.pets);
     elements.applicationsList.innerHTML = presenter.renderApplications(state.applications);
@@ -273,8 +305,10 @@
     try {
       const response = await apiRequest(`/api/public/tenants/${slug}`, {});
       elements.publicTenantView.innerHTML = presenter.renderPublicTenant(response.tenant);
+      elements.publicPetsList.innerHTML = presenter.renderPublicPetCards(response.pets ?? []);
     } catch (error) {
       elements.publicTenantView.innerHTML = "";
+      elements.publicPetsList.innerHTML = "";
       setFlash(error.message, true);
     }
   }

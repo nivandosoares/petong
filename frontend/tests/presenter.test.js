@@ -7,6 +7,7 @@ const {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderPublicPetCards,
   renderPublicTenant,
   renderPets,
   renderTenantCards,
@@ -101,5 +102,18 @@ test("renders tenant editor and public landing", () => {
       logo: ""
     }),
     /NGO Landing Page/
+  );
+
+  assert.match(
+    renderPublicPetCards([
+      {
+        name: "Luna",
+        species: "dog",
+        city: "Sao Paulo",
+        size: "medium",
+        description: "Friendly"
+      }
+    ]),
+    /Luna/
   );
 });

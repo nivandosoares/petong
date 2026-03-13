@@ -17,7 +17,27 @@ function renderPets(pets) {
             <span class="badge">${escapeHtml(pet.status)}</span>
           </div>
           <p class="card-meta">Species: ${escapeHtml(pet.species)}</p>
+          <p class="card-meta">Breed: ${escapeHtml(pet.breed || "unknown")}</p>
+          <p class="card-meta">Size: ${escapeHtml(pet.size || "unknown")}</p>
+          <p class="card-meta">City: ${escapeHtml(pet.city || "unknown")}</p>
+          <p class="card-meta">Health: ${escapeHtml(pet.healthStatus || "unknown")}</p>
+          <p class="card-meta">Special needs: ${escapeHtml(pet.specialNeeds || "none")}</p>
           <p class="card-meta">Age group: ${escapeHtml(pet.ageGroup)}</p>
+          <p class="card-meta">${escapeHtml(pet.description || "")}</p>
+          ${
+            pet.photoUrls?.length
+              ? `<p class="card-meta">Photos: ${escapeHtml(String(pet.photoUrls.length))}</p>`
+              : ""
+          }
+          ${
+            pet.adoptionStatus !== "archived"
+              ? `<div class="card-actions">
+                  <button class="button button-secondary" type="button" data-archive-id="${escapeHtml(pet.id)}">
+                    Archive
+                  </button>
+                </div>`
+              : ""
+          }
         </article>
       `
     )
@@ -69,6 +89,7 @@ const presenter = {
   escapeHtml,
   renderAuthState,
   renderApplications,
+  renderPublicPetCards,
   renderPublicTenant,
   renderPets,
   renderTenantCards,
@@ -160,4 +181,27 @@ function renderPublicTenant(tenant) {
       </div>
     </section>
   `;
+}
+
+function renderPublicPetCards(pets) {
+  if (!pets.length) {
+    return '<div class="empty">No public pets are available for this NGO right now.</div>';
+  }
+
+  return pets
+    .map(
+      (pet) => `
+        <article class="card">
+          <div class="card-top">
+            <div>
+              <h3>${escapeHtml(pet.name)}</h3>
+              <p class="card-meta">${escapeHtml(pet.species)} • ${escapeHtml(pet.city || "location pending")}</p>
+            </div>
+            <span class="badge">${escapeHtml(pet.size || "unknown")}</span>
+          </div>
+          <p class="card-meta">${escapeHtml(pet.description || "No description yet.")}</p>
+        </article>
+      `
+    )
+    .join("");
 }
